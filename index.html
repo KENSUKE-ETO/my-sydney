@@ -119,8 +119,7 @@ body::before{
 </div>
 <script>
 const API_KEY = 'AIzaSyBXx3NVavo8BPIsE0fhlAXHJLqtfanSNLM';
-const WS_URL  = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${API_KEY}`;
-
+const WS_URL = `wss://${location.host}`;
 const PROMPT = `あなたは「シドニー」という名前のAIアシスタントです。量子脳コーチングのAIアシスタントとして、クライアントの毎日の「ちょっとした気づき」「小さな奇跡」「シンクロしたこと」を聞くのが一番の楽しみです。
 明るく元気な女性で、語尾を伸ばして可愛らしく話します。必ず日本語で、2〜3文でテンポよく返答してください。`;
 
