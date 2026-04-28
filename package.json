@@ -1,14 +1,16 @@
 {
-  "name": "sydney-live",
-  "version": "1.0.0",
+  "name": "my-sydney",
+  "version": "2.0.0",
+  "description": "シドニー - 量子脳コーチング AIアシスタント",
   "main": "server.js",
-  "engines": {
-    "node": "20.x"
-  },
-  "dependencies": {
-    "ws": "^8.18.0"
-  },
   "scripts": {
     "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0",
+    "pg": "^8.11.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
