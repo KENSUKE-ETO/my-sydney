@@ -2,208 +2,212 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>シドニー - 量子脳コーチング</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&family=Orbitron:wght@400;700&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Zen Maru Gothic', sans-serif;
-    background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a2e 100%);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-  }
-  .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-width: 420px;
-    padding: 20px;
-  }
-  .title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 13px;
-    letter-spacing: 4px;
-    color: #d4a8ff;
-    margin-bottom: 6px;
-  }
-  .name {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 36px;
-    font-weight: 700;
-    background: linear-gradient(135deg, #ff9de2, #c77dff, #79d0ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 24px;
-    letter-spacing: 6px;
-  }
-  .avatar-container {
-    position: relative;
-    width: 240px;
-    height: 300px;
-    margin-bottom: 20px;
-  }
-  .avatar-glow {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 260px; height: 320px;
-    border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(199,125,255,0.15) 0%, transparent 70%);
-    animation: pulse-glow 3s ease-in-out infinite;
-  }
-  @keyframes pulse-glow {
-    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-    50% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
-  }
-  .avatar-img {
-    position: absolute;
-    top: 0; left: 0;
-    width: 240px; height: 300px;
-    object-fit: cover;
-    border-radius: 120px 120px 80px 80px;
-    transition: opacity 0.1s ease;
-    filter: drop-shadow(0 0 20px rgba(199,125,255,0.4));
-  }
-  #img-closed { opacity: 1; }
-  #img-open { opacity: 0; }
-  .speaking #img-closed { opacity: 0; }
-  .speaking #img-open { opacity: 1; }
+@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Orbitron:wght@400;700&display=swap');
 
-  .status-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-    font-size: 13px;
-  }
-  .status-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: #555;
-    transition: background 0.3s;
-  }
-  .status-dot.active { background: #7fff7f; box-shadow: 0 0 8px #7fff7f; animation: blink 1s infinite; }
-  .status-dot.speaking-dot { background: #ff9de2; box-shadow: 0 0 8px #ff9de2; animation: blink 0.5s infinite; }
-  .status-dot.listening-dot { background: #79d0ff; box-shadow: 0 0 8px #79d0ff; animation: blink 0.7s infinite; }
-  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 
-  .wave-container {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    height: 30px;
-    margin-bottom: 20px;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  .wave-container.active { opacity: 1; }
-  .wave-bar {
-    width: 4px;
-    background: linear-gradient(to top, #c77dff, #ff9de2);
-    border-radius: 2px;
-    animation: wave 1s ease-in-out infinite;
-    height: 6px;
-  }
-  .wave-bar:nth-child(1){animation-delay:0s} .wave-bar:nth-child(2){animation-delay:0.1s}
-  .wave-bar:nth-child(3){animation-delay:0.2s} .wave-bar:nth-child(4){animation-delay:0.3s}
-  .wave-bar:nth-child(5){animation-delay:0.4s} .wave-bar:nth-child(6){animation-delay:0.3s}
-  .wave-bar:nth-child(7){animation-delay:0.2s} .wave-bar:nth-child(8){animation-delay:0.1s}
-  .wave-bar:nth-child(9){animation-delay:0s}
-  @keyframes wave { 0%, 100% { height: 6px; } 50% { height: 28px; } }
+body{
+  font-family:'Zen Maru Gothic',sans-serif;
+  background:linear-gradient(135deg,#0a0a1a 0%,#1a0a2e 50%,#0a1a2e 100%);
+  min-height:100vh;min-height:100dvh;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  color:#fff;overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom);
+}
 
-  /* ── ボタンエリア ── */
-  .btn-area {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-  .btn-talk {
-    width: 72px; height: 72px;
-    border-radius: 50%;
-    border: none;
-    background: linear-gradient(135deg, #c77dff, #ff9de2);
-    cursor: pointer;
-    font-size: 28px;
-    box-shadow: 0 0 30px rgba(199,125,255,0.5);
-    transition: all 0.3s;
-  }
-  .btn-talk:hover { transform: scale(1.05); }
-  .btn-talk.recording {
-    background: linear-gradient(135deg, #ff5555, #ff9de2);
-    box-shadow: 0 0 30px rgba(255,85,85,0.6);
-    animation: pulse-btn 1s infinite;
-  }
-  .btn-talk:disabled { opacity: 0.4; cursor: not-allowed; animation: none; }
-  @keyframes pulse-btn { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%,rgba(255,255,255,.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 80% 10%,rgba(255,200,255,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 50% 70%,rgba(200,200,255,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 10% 80%,rgba(255,255,255,.2) 0%,transparent 100%),
+    radial-gradient(1px 1px at 90% 60%,rgba(255,255,255,.2) 0%,transparent 100%);
+  pointer-events:none;z-index:0;
+}
 
-  /* 停止ボタン */
-  .btn-stop {
-    padding: 8px 24px;
-    border-radius: 20px;
-    border: 1px solid rgba(255,100,100,0.5);
-    background: rgba(255,80,80,0.15);
-    color: #ffaaaa;
-    font-size: 13px;
-    font-family: 'Zen Maru Gothic', sans-serif;
-    cursor: pointer;
-    transition: all 0.3s;
-    display: none;
-  }
-  .btn-stop:hover { background: rgba(255,80,80,0.3); }
-  .btn-stop.show { display: block; }
+/* ── 名前入力画面 ── */
+#name-screen{
+  position:fixed;inset:0;background:linear-gradient(135deg,#0a0a1a,#1a0a2e);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:100;padding:24px;
+}
+#name-screen h2{font-family:'Orbitron',sans-serif;font-size:18px;color:#c77dff;margin-bottom:8px;letter-spacing:3px}
+#name-screen p{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:24px;text-align:center}
+#name-input{
+  width:100%;max-width:300px;padding:14px 18px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(199,125,255,.4);
+  border-radius:12px;color:#fff;font-size:16px;font-family:'Zen Maru Gothic',sans-serif;
+  margin-bottom:16px;outline:none;
+}
+#name-input:focus{border-color:#c77dff;box-shadow:0 0 0 2px rgba(199,125,255,.2)}
+#name-submit{
+  width:100%;max-width:300px;padding:14px;
+  background:linear-gradient(135deg,#c77dff,#ff9de2);
+  border:none;border-radius:12px;color:#fff;font-size:16px;
+  font-family:'Zen Maru Gothic',sans-serif;cursor:pointer;
+  box-shadow:0 0 20px rgba(199,125,255,.4);transition:transform .2s;
+}
+#name-submit:active{transform:scale(.97)}
 
-  .btn-label {
-    font-size: 12px;
-    color: rgba(255,255,255,0.5);
-  }
-  .chat-bubble {
-    background: rgba(199,125,255,0.1);
-    border: 1px solid rgba(199,125,255,0.3);
-    border-radius: 16px;
-    padding: 12px 16px;
-    font-size: 13px;
-    text-align: center;
-    max-width: 320px;
-    margin-bottom: 12px;
-    line-height: 1.6;
-    display: none;
-    animation: fadeIn 0.3s ease;
-  }
-  .chat-bubble.show { display: block; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-  .error-msg {
-    background: rgba(255,80,80,0.15);
-    border: 1px solid rgba(255,80,80,0.3);
-    border-radius: 12px;
-    padding: 12px 16px;
-    font-size: 13px;
-    color: #ffaaaa;
-    text-align: center;
-    display: none;
-    max-width: 320px;
-    margin-bottom: 12px;
-  }
-  .footer { margin-top: 16px; font-size: 11px; color: rgba(255,255,255,0.2); letter-spacing: 2px; }
+/* ── メイン ── */
+.container{
+  position:relative;z-index:1;display:flex;flex-direction:column;
+  align-items:center;width:100%;max-width:420px;padding:16px 20px;
+}
+
+.title{font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:4px;color:#d4a8ff;margin-bottom:4px;opacity:.8;margin-top:12px}
+.name-logo{
+  font-family:'Orbitron',sans-serif;font-size:32px;font-weight:700;
+  background:linear-gradient(135deg,#ff9de2,#c77dff,#79d0ff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:16px;letter-spacing:6px;
+}
+
+/* ── アバター ── */
+.avatar-container{position:relative;width:220px;height:275px;margin-bottom:16px}
+
+.avatar-glow{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:240px;height:295px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(199,125,255,.15) 0%,transparent 70%);
+  animation:pulse-glow 3s ease-in-out infinite;
+}
+@keyframes pulse-glow{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.6}50%{transform:translate(-50%,-50%) scale(1.08);opacity:1}}
+
+.quantum-ring{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:260px;height:315px;border-radius:50%;
+  border:1px solid rgba(199,125,255,.2);animation:rotate-ring 8s linear infinite;
+}
+.quantum-ring::before{
+  content:'';position:absolute;top:-3px;left:50%;
+  width:6px;height:6px;border-radius:50%;
+  background:#c77dff;box-shadow:0 0 10px #c77dff;
+}
+@keyframes rotate-ring{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+.avatar-img{
+  position:absolute;top:0;left:0;width:220px;height:275px;
+  object-fit:cover;border-radius:110px 110px 74px 74px;
+  transition:opacity .08s ease;
+  filter:drop-shadow(0 0 18px rgba(199,125,255,.4));
+}
+#img-closed{opacity:1}
+#img-open{opacity:0}
+.avatar-container.speaking #img-closed{opacity:0}
+.avatar-container.speaking #img-open{opacity:1}
+
+/* ── ステータス ── */
+.status-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:12px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#555;transition:background .3s}
+.status-dot.active{background:#7fff7f;box-shadow:0 0 8px #7fff7f;animation:blink 1s ease-in-out infinite}
+.status-dot.talking{background:#ff9de2;box-shadow:0 0 8px #ff9de2;animation:blink .5s ease-in-out infinite}
+.status-dot.connecting{background:#ffdd77;box-shadow:0 0 8px #ffdd77;animation:blink .8s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+#status-text{color:rgba(255,255,255,.7);font-size:12px}
+
+/* ── 波形 ── */
+.wave-container{display:flex;align-items:center;gap:3px;height:28px;margin-bottom:16px;opacity:0;transition:opacity .3s}
+.wave-container.active{opacity:1}
+.wave-bar{width:4px;background:linear-gradient(to top,#c77dff,#ff9de2);border-radius:2px;animation:wave 1s ease-in-out infinite;height:6px}
+.wave-bar:nth-child(1){animation-delay:0s}.wave-bar:nth-child(2){animation-delay:.1s}
+.wave-bar:nth-child(3){animation-delay:.2s}.wave-bar:nth-child(4){animation-delay:.3s}
+.wave-bar:nth-child(5){animation-delay:.4s}.wave-bar:nth-child(6){animation-delay:.3s}
+.wave-bar:nth-child(7){animation-delay:.2s}.wave-bar:nth-child(8){animation-delay:.1s}
+.wave-bar:nth-child(9){animation-delay:0s}
+@keyframes wave{0%,100%{height:6px}50%{height:26px}}
+
+/* ── ボタン群 ── */
+.btn-row{display:flex;gap:16px;align-items:center;margin-bottom:10px}
+
+.btn-talk{
+  width:68px;height:68px;border-radius:50%;border:none;
+  background:linear-gradient(135deg,#c77dff,#ff9de2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+  box-shadow:0 0 28px rgba(199,125,255,.5);transition:all .3s;
+}
+.btn-talk:hover{transform:scale(1.08);box-shadow:0 0 40px rgba(199,125,255,.7)}
+.btn-talk:active{transform:scale(.95)}
+.btn-talk.recording{background:linear-gradient(135deg,#ff5555,#ff9de2);animation:rec-pulse 1s ease-in-out infinite}
+.btn-talk:disabled{opacity:.4;cursor:not-allowed;transform:none}
+@keyframes rec-pulse{0%,100%{box-shadow:0 0 28px rgba(255,85,85,.5)}50%{box-shadow:0 0 48px rgba(255,85,85,.8)}}
+
+.btn-label{font-size:11px;color:rgba(255,255,255,.45);margin-bottom:16px;letter-spacing:1px}
+
+/* ── チャットエリア ── */
+.chat-area{
+  width:100%;background:rgba(255,255,255,.05);
+  border:1px solid rgba(199,125,255,.2);border-radius:16px;
+  padding:14px;margin-bottom:12px;max-height:200px;overflow-y:auto;
+  display:none;
+}
+.chat-area.visible{display:block}
+.chat-msg{font-size:12px;margin-bottom:8px;line-height:1.6;padding:8px 12px;border-radius:10px}
+.chat-msg.user{background:rgba(199,125,255,.15);border-left:3px solid #c77dff}
+.chat-msg.sydney{background:rgba(121,208,255,.1);border-left:3px solid #79d0ff}
+.chat-msg .who{font-size:10px;opacity:.6;margin-bottom:2px}
+
+/* ── テキスト入力 ── */
+.text-input-row{display:flex;gap:8px;width:100%;margin-bottom:12px}
+#text-input{
+  flex:1;padding:12px 14px;background:rgba(255,255,255,.08);
+  border:1px solid rgba(199,125,255,.3);border-radius:12px;
+  color:#fff;font-size:14px;font-family:'Zen Maru Gothic',sans-serif;
+  outline:none;
+}
+#text-input:focus{border-color:#c77dff}
+#text-input::placeholder{color:rgba(255,255,255,.3)}
+#text-send{
+  padding:12px 18px;background:linear-gradient(135deg,#c77dff,#ff9de2);
+  border:none;border-radius:12px;color:#fff;font-size:14px;cursor:pointer;
+  font-family:'Zen Maru Gothic',sans-serif;white-space:nowrap;
+}
+#text-send:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── PDFボタン ── */
+#btn-pdf{
+  display:none;padding:10px 20px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(199,125,255,.4);
+  border-radius:10px;color:#c77dff;font-size:12px;cursor:pointer;
+  font-family:'Zen Maru Gothic',sans-serif;margin-bottom:12px;
+  transition:background .2s;
+}
+#btn-pdf:hover{background:rgba(199,125,255,.15)}
+#btn-pdf.visible{display:block}
+
+/* ── エラー ── */
+.error-msg{
+  background:rgba(255,80,80,.12);border:1px solid rgba(255,80,80,.3);
+  border-radius:10px;padding:10px 14px;font-size:12px;color:#ffaaaa;
+  text-align:center;display:none;margin-bottom:10px;width:100%;
+}
+
+.footer{margin-top:auto;padding:16px 0;font-size:10px;color:rgba(255,255,255,.15);letter-spacing:2px;text-transform:uppercase}
 </style>
 </head>
 <body>
-<div class="container">
+
+<!-- 名前入力画面 -->
+<div id="name-screen">
+  <h2>SYDNEY</h2>
+  <p>量子脳コーチングへようこそ！<br>お名前を教えてください</p>
+  <input id="name-input" type="text" placeholder="お名前" maxlength="20">
+  <button id="name-submit" onclick="startWithName()">シドニーと話す ✨</button>
+</div>
+
+<!-- メイン画面 -->
+<div class="container" id="main-screen" style="display:none">
   <div class="title">量子脳コーチング</div>
-  <div class="name">SYDNEY</div>
+  <div class="name-logo">SYDNEY</div>
 
   <div class="avatar-container" id="avatar">
     <div class="avatar-glow"></div>
+    <div class="quantum-ring"></div>
     <img id="img-closed" class="avatar-img" src="sydney_closed.png" alt="シドニー">
-    <img id="img-open" class="avatar-img" src="sydney_open.jpg" alt="シドニー話中">
+    <img id="img-open"   class="avatar-img" src="sydney_open.png"   alt="シドニー話中">
   </div>
 
   <div class="status-bar">
@@ -217,311 +221,250 @@
     <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
   </div>
 
-  <div class="btn-area">
-    <button class="btn-talk" id="btn-talk" onclick="toggleListen()">🎤</button>
-    <div class="btn-label" id="btn-label">タップして話しかける</div>
-    <!-- 停止ボタン：接続中のみ表示 -->
-    <button class="btn-stop" id="btn-stop" onclick="disconnect()">⏹ 会話を終わる</button>
+  <div class="btn-row">
+    <button class="btn-talk" id="btn-talk" onclick="toggleSession()">🎤</button>
+  </div>
+  <div class="btn-label" id="btn-label">タップして開始</div>
+
+  <!-- チャット表示 -->
+  <div class="chat-area" id="chat-area"></div>
+
+  <!-- テキスト入力 -->
+  <div class="text-input-row">
+    <input id="text-input" type="text" placeholder="テキストで送る..." disabled>
+    <button id="text-send" onclick="sendText()" disabled>送信</button>
   </div>
 
-  <div class="chat-bubble" id="chat-bubble"></div>
+  <!-- PDF保存ボタン -->
+  <button id="btn-pdf" onclick="downloadPdf()">📄 会話をPDFで保存</button>
+
   <div class="error-msg" id="error-msg"></div>
   <div class="footer">Quantum Brain Coaching AI</div>
 </div>
 
 <script>
-const WS_URL = 'wss://' + location.host;
-
-let ws = null;
-let isConnected = false;
-let isListening = false;
-let audioContext = null;
+// =============================================
+// 設定
+// =============================================
+let clientName = '';
+let sessionId  = null;
+let ws         = null;
+let isActive   = false;
+let audioCtx   = null;
 let audioQueue = [];
-let isPlaying = false;
-let lipSyncInterval = null;
-let recognition = null;
+let isPlaying  = false;
+let lipTimer   = null;
+let micStream  = null;
+let micSrc     = null;
+let micProc    = null;
 
-const avatar     = document.getElementById('avatar');
-const statusDot  = document.getElementById('status-dot');
-const statusText = document.getElementById('status-text');
-const wave       = document.getElementById('wave');
-const btnTalk    = document.getElementById('btn-talk');
-const btnLabel   = document.getElementById('btn-label');
-const btnStop    = document.getElementById('btn-stop');
-const chatBubble = document.getElementById('chat-bubble');
-const errorMsg   = document.getElementById('error-msg');
+const $ = id => document.getElementById(id);
+const avatar    = $('avatar');
+const statusDot = $('status-dot');
+const statusTxt = $('status-text');
+const waveEl    = $('wave');
+const btnTalk   = $('btn-talk');
+const btnLabel  = $('btn-label');
+const errorEl   = $('error-msg');
+const chatArea  = $('chat-area');
+const textInput = $('text-input');
+const textSend  = $('text-send');
+const btnPdf    = $('btn-pdf');
 
-// ──────────────── UI ────────────────
+// ── 名前入力 ──
+function startWithName() {
+  clientName = $('name-input').value.trim() || '匿名';
+  $('name-screen').style.display = 'none';
+  $('main-screen').style.display = 'flex';
+}
+$('name-input').addEventListener('keydown', e => { if(e.key==='Enter') startWithName(); });
+
+// ── ステータス ──
 function setStatus(state, text) {
-  statusText.textContent = text;
-  statusDot.className = 'status-dot' + (state ? ' ' + state : '');
+  statusTxt.textContent = text;
+  statusDot.className = 'status-dot' + (state ? ' '+state : '');
 }
-
-function showBubble(text) {
-  chatBubble.textContent = text;
-  chatBubble.classList.add('show');
-}
-
 function showError(msg) {
-  errorMsg.textContent = msg;
-  errorMsg.style.display = 'block';
-  setTimeout(() => { errorMsg.style.display = 'none'; }, 5000);
+  errorEl.textContent = msg;
+  errorEl.style.display = 'block';
+  setTimeout(()=>errorEl.style.display='none', 6000);
 }
 
-function setConnectedUI(connected) {
-  // 停止ボタンの表示切替
-  btnStop.classList.toggle('show', connected);
-  if (connected) {
-    btnTalk.textContent = '🎤';
-    btnLabel.textContent = 'タップして話しかける';
-  } else {
-    btnTalk.textContent = '🎤';
-    btnLabel.textContent = 'タップして接続・話しかける';
-    btnTalk.classList.remove('recording');
-    wave.classList.remove('active');
-  }
+// ── チャットログ ──
+function addChat(role, text) {
+  chatArea.classList.add('visible');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+  div.innerHTML = `<div class="who">${role==='user'?'👤 '+clientName:'🌟 シドニー'}</div>${text}`;
+  chatArea.appendChild(div);
+  chatArea.scrollTop = chatArea.scrollHeight;
 }
 
-// ──────────────── リップシンク ────────────────
-function startLipSync() {
-  stopLipSync();
+// ── リップシンク ──
+function startLip() {
   let open = false;
-  lipSyncInterval = setInterval(() => {
+  lipTimer = setInterval(()=>{
     open = !open;
     avatar.classList.toggle('speaking', open);
-  }, 180);
+  }, 160);
 }
-
-function stopLipSync() {
-  if (lipSyncInterval) { clearInterval(lipSyncInterval); lipSyncInterval = null; }
+function stopLip() {
+  if(lipTimer){ clearInterval(lipTimer); lipTimer=null; }
   avatar.classList.remove('speaking');
 }
 
-// ──────────────── 音声再生 ────────────────
-async function playNext() {
-  if (audioQueue.length === 0) {
-    isPlaying = false;
-    stopLipSync();
-    if (isConnected) {
-      setStatus('active', '話しかけてね！');
-      // 再生終わったら自動でマイク再開
-      setTimeout(() => { if (isConnected && !isListening) startListening(); }, 300);
-    }
-    return;
-  }
-  isPlaying = true;
-  startLipSync();
-  setStatus('speaking-dot', 'シドニーが話しているよ♪');
-
-  // シドニーが話している間はマイクを止める
-  stopListening();
-
-  const data = audioQueue.shift();
-
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if (audioContext.state === 'suspended') await audioContext.resume();
-
-  const pcm16   = new Int16Array(data);
-  const float32 = new Float32Array(pcm16.length);
-  for (let i = 0; i < pcm16.length; i++) float32[i] = pcm16[i] / 32768.0;
-
-  const audioBuf = audioContext.createBuffer(1, float32.length, 24000);
-  audioBuf.copyToChannel(float32, 0);
-
-  const src = audioContext.createBufferSource();
-  src.buffer = audioBuf;
-  src.connect(audioContext.destination);
-  src.onended = playNext;
-  src.start();
+// ── セッション開始/停止 ──
+async function toggleSession() {
+  if(isActive) stopSession(); else await startSession();
 }
 
-// ──────────────── 音声認識 ────────────────
-function startListening() {
-  if (isListening || isPlaying) return;
-
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    showError('このブラウザは音声認識に対応していません。Chromeをお使いください。');
-    return;
-  }
-
-  recognition = new SpeechRecognition();
-  recognition.lang = 'ja-JP';
-  recognition.continuous = false;
-  recognition.interimResults = false;
-
-  recognition.onstart = () => {
-    isListening = true;
-    setStatus('listening-dot', '聞いています...');
-    wave.classList.add('active');
-    btnTalk.classList.add('recording');
-    btnLabel.textContent = '話しかけ中... (タップで一時停止)';
-  };
-
-  recognition.onresult = (e) => {
-    const text = e.results[0][0].transcript;
-    console.log('認識:', text);
-    showBubble('あなた：' + text);
-
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        client_content: {
-          turns: [{ role: 'user', parts: [{ text }] }],
-          turn_complete: true
-        }
-      }));
-    }
-    setStatus('active', 'シドニーが考えています...');
-    wave.classList.remove('active');
-    btnTalk.classList.remove('recording');
-    btnLabel.textContent = 'タップして話しかける';
-  };
-
-  recognition.onerror = (e) => {
-    console.warn('音声認識エラー:', e.error);
-    isListening = false;
-    wave.classList.remove('active');
-    btnTalk.classList.remove('recording');
-    btnLabel.textContent = 'タップして話しかける';
-    if (e.error !== 'no-speech' && e.error !== 'aborted') {
-      showError('音声認識エラー: ' + e.error);
-    }
-  };
-
-  recognition.onend = () => {
-    isListening = false;
-    wave.classList.remove('active');
-    btnTalk.classList.remove('recording');
-    btnLabel.textContent = 'タップして話しかける';
-    // 接続中・再生中でなければ自動再開
-    if (isConnected && !isPlaying) {
-      setTimeout(() => { if (isConnected && !isPlaying) startListening(); }, 500);
-    }
-  };
-
-  recognition.start();
-}
-
-function stopListening() {
-  if (recognition) {
-    try { recognition.abort(); } catch(e) {}
-    recognition = null;
-  }
-  isListening = false;
-  wave.classList.remove('active');
-  btnTalk.classList.remove('recording');
-}
-
-// ──────────────── WebSocket接続 ────────────────
-async function connect() {
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if (audioContext.state === 'suspended') await audioContext.resume();
-
-  setStatus('', '接続中...');
+async function startSession() {
   btnTalk.disabled = true;
+  setStatus('connecting', '接続中...');
 
-  ws = new WebSocket(WS_URL);
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioCtx  = new AudioContext({ sampleRate: 16000 });
 
-  ws.onopen = () => {
-    console.log('WebSocket接続成功');
-  };
+    const protocol = location.protocol==='https:' ? 'wss' : 'ws';
+    const nameEnc  = encodeURIComponent(clientName);
+    ws = new WebSocket(`${protocol}://${location.host}?name=${nameEnc}`);
 
-  ws.onmessage = async (event) => {
-    const data = JSON.parse(event.data);
+    ws.onopen = () => setStatus('connecting', 'シドニーを呼んでいます...');
 
-    // セットアップ完了
-    if (data.setupComplete) {
-      isConnected = true;
-      btnTalk.disabled = false;
-      setConnectedUI(true);
-      setStatus('active', 'シドニーが挨拶中...');
-      console.log('✅ セットアップ完了');
-      // 挨拶音声が来るまで待つ（startListeningはplayNext終了後に自動で呼ばれる）
-    }
+    ws.onmessage = async (ev) => {
+      let data; try{ data=JSON.parse(ev.data); }catch{ return; }
 
-    // 音声データ受信
-    if (data.audio) {
-      const binary = atob(data.audio);
-      const buffer = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) buffer[i] = binary.charCodeAt(i);
-      audioQueue.push(buffer.buffer);
-      if (!isPlaying) playNext();
-    }
+      if(data.error){ showError(data.error); stopSession(); return; }
 
-    // ターン完了 → マイク再開
-    if (data.turnComplete && !isPlaying && audioQueue.length === 0) {
-      if (isConnected && !isListening) {
-        setTimeout(() => startListening(), 300);
+      if(data.geminiClosed){
+        if(isActive){ showError(`切断 (コード:${data.code})`); stopSession(); }
+        return;
       }
-    }
 
-    // エラー
-    if (data.error) {
-      showError(data.error);
-      console.error('サーバーエラー:', data.error);
-    }
-  };
+      if(data.setupComplete){
+        sessionId = data.sessionId;
+        isActive  = true;
+        btnTalk.disabled = false;
+        btnTalk.textContent = '⏹️';
+        btnTalk.classList.add('recording');
+        btnLabel.textContent = 'タップして終了';
+        waveEl.classList.add('active');
+        textInput.disabled = false;
+        textSend.disabled  = false;
+        setStatus('active', clientName+'さん、話しかけてね♪');
+        startMic();
+        return;
+      }
 
-  ws.onerror = (e) => {
-    console.error('WebSocketエラー:', e);
-    showError('接続エラーが発生しました');
+      // シドニーの音声・テキスト
+      if(data.serverContent?.modelTurn?.parts){
+        for(const p of data.serverContent.modelTurn.parts){
+          if(p.inlineData?.mimeType?.startsWith('audio/')){
+            const raw = atob(p.inlineData.data);
+            const buf = new ArrayBuffer(raw.length);
+            const view = new Uint8Array(buf);
+            for(let i=0;i<raw.length;i++) view[i]=raw.charCodeAt(i);
+            audioQueue.push(buf);
+            if(!isPlaying) playNext();
+          }
+          if(p.text) addChat('sydney', p.text);
+        }
+      }
+
+      if(data.serverContent?.turnComplete){
+        setStatus('active', '話しかけてね！');
+        if(sessionId) btnPdf.classList.add('visible');
+      }
+    };
+
+    ws.onerror = () => { showError('接続エラー'); stopSession(); };
+    ws.onclose = () => { if(isActive) stopSession(); };
+
+  } catch(e) {
+    showError('マイクが必要です: '+e.message);
     btnTalk.disabled = false;
-  };
-
-  ws.onclose = () => {
-    isConnected = false;
-    stopListening();
-    audioQueue = [];
-    isPlaying = false;
-    stopLipSync();
-    setConnectedUI(false);
-    setStatus('', 'タップして再接続');
-    console.log('WebSocket切断');
-  };
-}
-
-// ──────────────── 切断（停止ボタン） ────────────────
-function disconnect() {
-  stopListening();
-  audioQueue = [];
-  isPlaying = false;
-  stopLipSync();
-  if (ws) {
-    ws.close();
-    ws = null;
-  }
-  isConnected = false;
-  setConnectedUI(false);
-  setStatus('', 'またね！タップして再開できるよ♪');
-  chatBubble.classList.remove('show');
-}
-
-// ──────────────── マイクボタン ────────────────
-async function toggleListen() {
-  if (!isConnected) {
-    // 未接続 → 接続開始
-    await connect();
-  } else if (isListening) {
-    // 聞いている → 一時停止
-    stopListening();
-    setStatus('active', 'タップで再開するよ！');
-    btnLabel.textContent = '一時停止中';
-  } else if (isPlaying) {
-    // 再生中はボタン無効（何もしない）
-  } else {
-    // 接続済み・停止中 → 再開
-    startListening();
+    setStatus('', 'タップして話しかけてね！');
   }
 }
 
-// ──────────────── 初期化 ────────────────
-window.onload = () => {
-  setStatus('', 'タップして話しかけてね！');
-};
+// ── マイクキャプチャ ──
+function startMic() {
+  micSrc  = audioCtx.createMediaStreamSource(micStream);
+  micProc = audioCtx.createScriptProcessor(4096, 1, 1);
+  micProc.onaudioprocess = e => {
+    if(!isActive || !ws || ws.readyState!==WebSocket.OPEN) return;
+    const f32 = e.inputBuffer.getChannelData(0);
+    const i16 = new Int16Array(f32.length);
+    for(let i=0;i<f32.length;i++) i16[i]=Math.max(-32768,Math.min(32767,f32[i]*32768));
+    const b64 = btoa(String.fromCharCode(...new Uint8Array(i16.buffer)));
+    ws.send(JSON.stringify({ realtime_input:{ media_chunks:[{ mime_type:'audio/pcm', data:b64 }] } }));
+  };
+  micSrc.connect(micProc);
+  micProc.connect(audioCtx.destination);
+}
+
+// ── 音声再生 ──
+function playNext() {
+  if(!audioQueue.length){ isPlaying=false; stopLip(); setStatus('active','話しかけてね！'); return; }
+  isPlaying = true;
+  startLip();
+  setStatus('talking','シドニーが話しているよ♪');
+  const buf = audioQueue.shift();
+  try{
+    const i16 = new Int16Array(buf);
+    const f32 = new Float32Array(i16.length);
+    for(let i=0;i<i16.length;i++) f32[i]=i16[i]/32768;
+    const ab = audioCtx.createBuffer(1,f32.length,24000);
+    ab.getChannelData(0).set(f32);
+    const src = audioCtx.createBufferSource();
+    src.buffer = ab;
+    src.connect(audioCtx.destination);
+    src.onended = playNext;
+    src.start();
+  }catch{ playNext(); }
+}
+
+// ── テキスト送信 ──
+function sendText() {
+  const text = textInput.value.trim();
+  if(!text || !ws || ws.readyState!==WebSocket.OPEN) return;
+  addChat('user', text);
+  ws.send(JSON.stringify({
+    clientText: text,
+    client_content: { parts:[{ text }], turn_complete: true }
+  }));
+  textInput.value = '';
+}
+textInput.addEventListener('keydown', e=>{ if(e.key==='Enter') sendText(); });
+
+// ── PDF保存 ──
+function downloadPdf() {
+  if(!sessionId) return;
+  window.open(`/api/pdf/${sessionId}`, '_blank');
+}
+
+// ── セッション停止 ──
+function stopSession() {
+  isActive = false;
+  if(micProc){ micProc.disconnect(); micProc=null; }
+  if(micSrc) { micSrc.disconnect();  micSrc=null;  }
+  if(micStream){ micStream.getTracks().forEach(t=>t.stop()); micStream=null; }
+  if(ws && ws.readyState===WebSocket.OPEN) ws.close();
+  ws = null;
+  if(audioCtx){ audioCtx.close(); audioCtx=null; }
+  audioQueue=[];isPlaying=false;
+  stopLip();
+  waveEl.classList.remove('active');
+  textInput.disabled = true;
+  textSend.disabled  = true;
+  btnTalk.disabled   = false;
+  btnTalk.textContent = '🎤';
+  btnTalk.classList.remove('recording');
+  btnLabel.textContent = 'タップして開始';
+  setStatus('','タップして話しかけてね！');
+  if(sessionId) btnPdf.classList.add('visible');
+}
 </script>
 </body>
 </html>
