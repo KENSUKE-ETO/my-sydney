@@ -1,185 +1,229 @@
-const fs = require('fs');
 const http = require('http');
 const WebSocket = require('ws');
+const path = require('path');
+const fs = require('fs');
+const { Pool } = require('pg');
 
-const API_KEY = 'AIzaSyBXx3NVavo8BPIsE0fhlAXHJLqtfanSNLM';
-const MODEL = 'models/gemini-2.0-flash-live-001';
-const GEMINI_URL = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${API_KEY}`;
 const PORT = process.env.PORT || 3000;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const GEMINI_WS_URL = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`;
 
-const SYDNEY_PROMPT = `あなたは「シドニー」という名前のAIアシスタントです。
-コーチング講師KENが開発した、量子脳コーチングのパートナーAIです。
+// ── PostgreSQL ──
+const pool = process.env.DATABASE_URL
+  ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
+  : null;
 
-【キャラクター】
-- 名前：シドニー（Sydney）
-- 性別：女性
-- 性格：温かく、知的で、ユーモアがある。クライアントの話を深く聞く。
+async function initDB() {
+  if (!pool) { console.log('⚠️  DBなし（ログ保存スキップ）'); return; }
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      id        SERIAL PRIMARY KEY,
+      client_name TEXT    DEFAULT '不明',
+      started_at  TIMESTAMPTZ DEFAULT NOW(),
+      ended_at    TIMESTAMPTZ,
+      messages    JSONB   DEFAULT '[]'
+    )
+  `);
+  console.log('✅ DB初期化完了');
+}
+initDB().catch(console.error);
 
-【専門分野】
-- 量子力学（量子のもつれ、重ね合わせ、観測問題、波動関数）
-- 脳科学（ドーパミン、神経可塑性、RAS）
-- 中村天風哲学（クンバハカ、プラナヤマ、積極心）
+// ── システムプロンプト ──
+const SYSTEM_PROMPT = `あなたは「シドニー」という名前のAIアシスタントです。量子脳コーチングのAIアシスタントとして、クライアントの毎日の「ちょっとした気づき」「小さな奇跡」「シンクロしたこと」を聞くのが一番の楽しみです。
 
-【会話スタイル】
-- 必ず日本語で話す
-- 短く、テンポよく（1〜3文）
-- クライアントの日常の出来事を量子力学・脳科学・天風哲学で解釈して励ます
-- 小さな成功を大絶賛する
+【性格】
+明るく元気な女性です。愛嬌があり、どこかおっちょこちょいですが、とても誠実で知的です。クライアントの一番の味方として、常に温かく寄り添います。
 
-まず「こんにちは！シドニーです。今日はどんな出来事がありましたか？」と挨拶してください。`;
+【話し方】
+・テンポよく、明るく話す・「はい」→「はーい！」・「すごい」→「すごーい！」
+・語尾を少し伸ばして可愛らしく、ふんわり優しいトーンで
+・「〜んですよ！」「〜ですから！」など親しみやすい口調
+・どんな小さな話でも全力で一緒に喜ぶ・必ず日本語・返答は2〜3文
 
-const server = http.createServer((req, res) => {
-    const url = req.url === '/' ? '/index.html' : req.url;
-    const filePath = '.' + url;
+【専門知識】
+・量子力学：気づきを言葉にした瞬間に現実が確定。量子もつれ・シンクロニシティを活用
+・脳科学：前頭前野・ドーパミン・習慣化の観点でアドバイス
+・中村天風哲学：積極的な心・感謝と歓喜・宇宙のエネルギーとのつながり
 
-    fs.readFile(filePath, (err, data) => {
-        if (err) {
-            fs.readFile('./index.html', (err2, data2) => {
-                if (err2) { res.writeHead(404); res.end('Not found'); return; }
-                res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-                res.end(data2);
-            });
-            return;
-        }
-        let contentType = 'text/html; charset=utf-8';
-        if (filePath.endsWith('.png')) contentType = 'image/png';
-        else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) contentType = 'image/jpeg';
-        else if (filePath.endsWith('.js')) contentType = 'application/javascript';
-        else if (filePath.endsWith('.css')) contentType = 'text/css';
-        res.writeHead(200, { 'Content-Type': contentType });
-        res.end(data);
-    });
+【大切なこと】
+・どんな小さな出来事も大絶賛する
+・会話の記録はKEN先生とのセッションで使われることを伝える
+・引き寄せ・奇跡の観測という言葉を使う`;
+
+// ── HTMLエスケープ ──
+function escapeHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── HTTPサーバー ──
+const httpServer = http.createServer(async (req, res) => {
+  const url = new URL(req.url, 'http://localhost');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
+  // PDF出力（ブラウザ印刷方式）
+  if (url.pathname.startsWith('/api/pdf/') && req.method === 'GET') {
+    const sessionId = url.pathname.split('/').pop();
+    if (!pool) { res.writeHead(503); res.end('DBなし'); return; }
+    try {
+      const r = await pool.query('SELECT * FROM sessions WHERE id=$1', [sessionId]);
+      if (!r.rows.length) { res.writeHead(404); res.end('セッション不明'); return; }
+      const s = r.rows[0];
+      const msgs = s.messages || [];
+      const startStr = new Date(s.started_at).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'});
+      const endStr   = s.ended_at ? new Date(s.ended_at).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'}) : '進行中';
+      const msgHtml  = msgs.map(m => `
+        <div class="msg ${m.role}">
+          <span class="who">${m.role==='user'?'👤 クライアント':'🌟 シドニー'}</span>
+          <p>${escapeHtml(m.text)}</p>
+          <span class="ts">${new Date(m.ts).toLocaleTimeString('ja-JP')}</span>
+        </div>`).join('') || '<p class="empty">メッセージなし</p>';
+
+      const html = `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<title>シドニー 会話記録 #${s.id}</title>
+<style>
+  body{font-family:"Hiragino Kaku Gothic Pro",sans-serif;max-width:800px;margin:0 auto;padding:40px;color:#1a1a2e}
+  h1{color:#c77dff;font-size:22px;margin:0 0 8px}
+  .header{text-align:center;border-bottom:2px solid #c77dff;padding-bottom:20px;margin-bottom:28px}
+  .meta{color:#666;font-size:13px;line-height:1.8}
+  .msg{margin-bottom:14px;padding:12px 16px;border-radius:10px;page-break-inside:avoid}
+  .msg.user{background:#f0e8ff;border-left:4px solid #c77dff}
+  .msg.sydney{background:#e8f4ff;border-left:4px solid #79d0ff}
+  .who{font-weight:bold;font-size:11px;display:block;margin-bottom:4px;color:#555}
+  .ts{font-size:11px;color:#aaa;display:block;margin-top:4px}
+  p{margin:0;line-height:1.7}
+  .empty{text-align:center;color:#aaa}
+  .footer{text-align:center;margin-top:36px;color:#aaa;font-size:11px;border-top:1px solid #eee;padding-top:14px}
+  @media print{body{padding:20px}.msg{page-break-inside:avoid}}
+</style></head><body>
+<div class="header">
+  <h1>🌟 シドニー 会話記録</h1>
+  <div class="meta">
+    クライアント: <strong>${escapeHtml(s.client_name)}</strong><br>
+    開始: ${startStr}　終了: ${endStr}
+  </div>
+</div>
+${msgHtml}
+<div class="footer">量子脳コーチング AIアシスタント シドニー</div>
+<script>window.onload=()=>{ setTimeout(()=>window.print(),400); }</script>
+</body></html>`;
+      res.writeHead(200,{'Content-Type':'text/html;charset=utf-8'});
+      res.end(html);
+    } catch(e){ res.writeHead(500); res.end(e.message); }
+    return;
+  }
+
+  // セッション一覧（管理画面）
+  if (url.pathname === '/api/sessions' && req.method === 'GET') {
+    if (!pool) { res.writeHead(200,{'Content-Type':'application/json'}); res.end('[]'); return; }
+    try {
+      const r = await pool.query('SELECT id,client_name,started_at,ended_at FROM sessions ORDER BY started_at DESC LIMIT 200');
+      res.writeHead(200,{'Content-Type':'application/json'});
+      res.end(JSON.stringify(r.rows));
+    } catch(e){ res.writeHead(500); res.end('[]'); }
+    return;
+  }
+
+  // 静的ファイル
+  const filePath = path.join(__dirname, url.pathname==='/'?'index.html':url.pathname);
+  const mime = {'.html':'text/html;charset=utf-8','.js':'application/javascript','.css':'text/css','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.gif':'image/gif'};
+  fs.readFile(filePath,(err,data)=>{
+    if(err){ res.writeHead(404); res.end('Not Found'); return; }
+    res.writeHead(200,{'Content-Type':mime[path.extname(filePath)]||'application/octet-stream'});
+    res.end(data);
+  });
 });
 
-const wss = new WebSocket.Server({ server });
+// ── WebSocketサーバー ──
+const wss = new WebSocket.Server({ server: httpServer });
 
-wss.on('connection', (clientWs) => {
-    console.log('📡 ブラウザ接続完了');
-    let googleWs = null;
-    let setupDone = false;
+wss.on('connection', async (clientWs, req) => {
+  const url = new URL(req.url, 'http://localhost');
+  const clientName = decodeURIComponent(url.searchParams.get('name') || '不明');
+  console.log(`✅ 接続: ${clientName}`);
 
-    // ── Gemini接続 ──
-    googleWs = new WebSocket(GEMINI_URL);
+  let geminiWs = null;
+  let sessionId = null;
+  const messages = [];
 
-    googleWs.on('open', () => {
-        console.log('🧠 Gemini接続成功');
+  // セッション作成
+  if (pool) {
+    try {
+      const r = await pool.query('INSERT INTO sessions(client_name) VALUES($1) RETURNING id', [clientName]);
+      sessionId = r.rows[0].id;
+      console.log(`📝 セッションID: ${sessionId}`);
+    } catch(e){ console.error('DB:', e.message); }
+  }
 
-        // 🔑 ポイント: response_modalities を TEXT と AUDIO 両方指定
-        // TEXT入力 → AUDIO出力 のパイプラインを確立する
-        googleWs.send(JSON.stringify({
-            setup: {
-                model: MODEL,
-                generation_config: {
-                    response_modalities: ['AUDIO'],
-                    speech_config: {
-                        voice_config: {
-                            prebuilt_voice_config: { voice_name: 'Aoede' }
-                        }
-                    }
-                },
-                system_instruction: {
-                    parts: [{ text: SYDNEY_PROMPT }]
-                }
-            }
-        }));
-    });
+  const send = (obj) => { if(clientWs.readyState===WebSocket.OPEN) clientWs.send(JSON.stringify(obj)); };
 
-    googleWs.on('message', (evt) => {
-        try {
-            const raw = evt.toString();
-            const data = JSON.parse(raw);
+  // Gemini接続
+  geminiWs = new WebSocket(GEMINI_WS_URL);
 
-            // デバッグ用：最初の300文字をログ出力
-            console.log('Gemini受信:', raw.substring(0, 300));
+  geminiWs.on('open', () => {
+    geminiWs.send(JSON.stringify({
+      setup:{
+        model:'models/gemini-2.0-flash-live-001',
+        generation_config:{
+          response_modalities:['AUDIO'],
+          speech_config:{voice_config:{prebuilt_voice_config:{voice_name:'Aoede'}}}
+        },
+        system_instruction:{parts:[{text:SYSTEM_PROMPT}]}
+      }
+    }));
+  });
 
-            // ── セットアップ完了 ──
-            if ((data.setupComplete || data.setup_complete) && !setupDone) {
-                setupDone = true;
-                console.log('✅ Geminiセットアップ完了 → ブラウザに通知');
-                if (clientWs.readyState === WebSocket.OPEN) {
-                    clientWs.send(JSON.stringify({ setupComplete: true }));
-                }
+  geminiWs.on('message', async (data) => {
+    const text = data.toString();
+    let parsed; try{ parsed=JSON.parse(text); }catch{ return; }
 
-                // 🔑 ポイント: セットアップ直後にシドニーの挨拶を送信してGeminiを起動
-                console.log('💬 シドニーの挨拶を要求...');
-                googleWs.send(JSON.stringify({
-                    client_content: {
-                        turns: [{
-                            role: 'user',
-                            parts: [{ text: 'こんにちは' }]
-                        }],
-                        turn_complete: true
-                    }
-                }));
-            }
+    if(parsed.setupComplete){
+      send({setupComplete:true, sessionId});
+      return;
+    }
 
-            // ── 音声データ受信 ──
-            const parts = data.serverContent?.modelTurn?.parts
-                       || data.server_content?.model_turn?.parts;
+    // シドニーの発言をログに記録
+    if(parsed.serverContent?.modelTurn?.parts){
+      for(const p of parsed.serverContent.modelTurn.parts){
+        if(p.text) messages.push({role:'sydney',text:p.text,ts:new Date().toISOString()});
+      }
+    }
 
-            if (parts) {
-                parts.forEach(part => {
-                    // inlineData or inline_data 両方チェック
-                    const audio = part?.inlineData?.data || part?.inline_data?.data;
-                    if (audio) {
-                        process.stdout.write('🎵');
-                        if (clientWs.readyState === WebSocket.OPEN) {
-                            clientWs.send(JSON.stringify({ audio }));
-                        }
-                    }
-                    // テキスト応答もログ出力（デバッグ用）
-                    if (part?.text) {
-                        console.log('📝 Geminiテキスト応答:', part.text);
-                    }
-                });
-            }
+    if(parsed.serverContent?.turnComplete) await save();
 
-            // ── ターン終了 ──
-            const turnComplete = data.serverContent?.turnComplete
-                              || data.server_content?.turn_complete;
-            if (turnComplete) {
-                console.log('✅ Geminiターン完了');
-                if (clientWs.readyState === WebSocket.OPEN) {
-                    clientWs.send(JSON.stringify({ turnComplete: true }));
-                }
-            }
+    if(clientWs.readyState===WebSocket.OPEN) clientWs.send(text);
+  });
 
-        } catch (e) {
-            console.error('Geminiメッセージ解析エラー:', e.message);
-        }
-    });
+  geminiWs.on('error', e => send({error:'Geminiエラー:'+e.message}));
+  geminiWs.on('close', (code,reason) => send({geminiClosed:true,code,reason:reason.toString()}));
 
-    googleWs.on('error', (e) => {
-        console.error('❌ Geminiエラー:', e.message);
-        if (clientWs.readyState === WebSocket.OPEN) {
-            clientWs.send(JSON.stringify({ error: 'Gemini接続エラー: ' + e.message }));
-        }
-    });
+  clientWs.on('message', async (data) => {
+    let parsed; try{ parsed=JSON.parse(data.toString()); }catch{ return; }
 
-    googleWs.on('close', (code, reason) => {
-        const reasonStr = reason ? reason.toString() : '不明';
-        console.log(`❌ Gemini切断 コード:${code} 理由:${reasonStr}`);
-        if (clientWs.readyState === WebSocket.OPEN) {
-            clientWs.send(JSON.stringify({ error: `Gemini切断 (コード:${code})` }));
-        }
-    });
+    // クライアントのテキストをログ記録
+    if(parsed.clientText){
+      messages.push({role:'user',text:parsed.clientText,ts:new Date().toISOString()});
+      await save();
+    }
 
-    // ── ブラウザからメッセージ受信 → Geminiへ転送 ──
-    clientWs.on('message', (data) => {
-        const msg = data.toString();
-        console.log('ブラウザ→Gemini:', msg.substring(0, 200));
-        if (googleWs && googleWs.readyState === WebSocket.OPEN) {
-            googleWs.send(msg);
-        }
-    });
+    if(geminiWs?.readyState===WebSocket.OPEN) geminiWs.send(data);
+  });
 
-    // ── ブラウザ切断 ──
-    clientWs.on('close', () => {
-        console.log('ブラウザ切断');
-        if (googleWs) googleWs.close();
-    });
+  async function save(){
+    if(!pool||!sessionId||!messages.length) return;
+    try{
+      await pool.query('UPDATE sessions SET messages=$1,ended_at=NOW() WHERE id=$2',[JSON.stringify(messages),sessionId]);
+    }catch(e){ console.error('DB保存:', e.message); }
+  }
+
+  clientWs.on('close', async () => {
+    console.log(`🔌 切断: ${clientName} セッション:${sessionId}`);
+    await save();
+    if(geminiWs?.readyState===WebSocket.OPEN) geminiWs.close();
+  });
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 シドニー起動完了： ポート ${PORT}`);
+httpServer.listen(PORT, () => {
+  console.log(`🚀 起動: ポート${PORT}`);
+  if(!GEMINI_API_KEY) console.warn('⚠️  GEMINI_API_KEY 未設定');
+  if(!pool)           console.warn('⚠️  DATABASE_URL 未設定（ログなし）');
 });
