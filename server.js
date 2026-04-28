@@ -2,7 +2,7 @@ const fs = require('fs');
 const http = require('http');
 const WebSocket = require('ws');
 
-const API_KEY = 'AIzaSyDMJvi9UWAnO5jK6Llb81Crf32R3kn3ZRg';
+const API_KEY = 'AIzaSyBXx3NVavo8BPIsE0fhlAXHJLqtfanSNLM';
 const MODEL = 'models/gemini-2.0-flash-live-001';
 const GEMINI_URL = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${API_KEY}`;
 const PORT = process.env.PORT || 3000;
