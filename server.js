@@ -58,20 +58,14 @@ wss.on('connection', (clientWs) => {
     let googleWs = null;
     let setupDone = false;
 
-    const forceStartTimer = setTimeout(() => {
-        if (!setupDone) {
-            setupDone = true;
-            console.log('⚡ タイムアウト後強制スタート');
-            if (clientWs.readyState === WebSocket.OPEN) {
-                clientWs.send(JSON.stringify({ setupComplete: true }));
-            }
-        }
-    }, 3000);
-
+    // ── Gemini接続 ──
     googleWs = new WebSocket(GEMINI_URL);
 
     googleWs.on('open', () => {
         console.log('🧠 Gemini接続成功');
+
+        // 🔑 ポイント: response_modalities を TEXT と AUDIO 両方指定
+        // TEXT入力 → AUDIO出力 のパイプラインを確立する
         googleWs.send(JSON.stringify({
             setup: {
                 model: MODEL,
@@ -92,23 +86,40 @@ wss.on('connection', (clientWs) => {
 
     googleWs.on('message', (evt) => {
         try {
-            const data = JSON.parse(evt.toString());
-            console.log('Gemini受信:', JSON.stringify(data).substring(0, 200));
+            const raw = evt.toString();
+            const data = JSON.parse(raw);
 
+            // デバッグ用：最初の300文字をログ出力
+            console.log('Gemini受信:', raw.substring(0, 300));
+
+            // ── セットアップ完了 ──
             if ((data.setupComplete || data.setup_complete) && !setupDone) {
                 setupDone = true;
-                clearTimeout(forceStartTimer);
-                console.log('✅ Geminiセットアップ完了');
+                console.log('✅ Geminiセットアップ完了 → ブラウザに通知');
                 if (clientWs.readyState === WebSocket.OPEN) {
                     clientWs.send(JSON.stringify({ setupComplete: true }));
                 }
+
+                // 🔑 ポイント: セットアップ直後にシドニーの挨拶を送信してGeminiを起動
+                console.log('💬 シドニーの挨拶を要求...');
+                googleWs.send(JSON.stringify({
+                    client_content: {
+                        turns: [{
+                            role: 'user',
+                            parts: [{ text: 'こんにちは' }]
+                        }],
+                        turn_complete: true
+                    }
+                }));
             }
 
+            // ── 音声データ受信 ──
             const parts = data.serverContent?.modelTurn?.parts
                        || data.server_content?.model_turn?.parts;
 
             if (parts) {
                 parts.forEach(part => {
+                    // inlineData or inline_data 両方チェック
                     const audio = part?.inlineData?.data || part?.inline_data?.data;
                     if (audio) {
                         process.stdout.write('🎵');
@@ -116,7 +127,21 @@ wss.on('connection', (clientWs) => {
                             clientWs.send(JSON.stringify({ audio }));
                         }
                     }
+                    // テキスト応答もログ出力（デバッグ用）
+                    if (part?.text) {
+                        console.log('📝 Geminiテキスト応答:', part.text);
+                    }
                 });
+            }
+
+            // ── ターン終了 ──
+            const turnComplete = data.serverContent?.turnComplete
+                              || data.server_content?.turn_complete;
+            if (turnComplete) {
+                console.log('✅ Geminiターン完了');
+                if (clientWs.readyState === WebSocket.OPEN) {
+                    clientWs.send(JSON.stringify({ turnComplete: true }));
+                }
             }
 
         } catch (e) {
@@ -132,18 +157,25 @@ wss.on('connection', (clientWs) => {
     });
 
     googleWs.on('close', (code, reason) => {
-        console.log('❌ ジェミニ切断 コード:' + code + ' 理由:' + reason.toString());
-    });
-
-    clientWs.on('message', (data) => {
-        if (googleWs && googleWs.readyState === WebSocket.OPEN) {
-            googleWs.send(data.toString());
+        const reasonStr = reason ? reason.toString() : '不明';
+        console.log(`❌ Gemini切断 コード:${code} 理由:${reasonStr}`);
+        if (clientWs.readyState === WebSocket.OPEN) {
+            clientWs.send(JSON.stringify({ error: `Gemini切断 (コード:${code})` }));
         }
     });
 
+    // ── ブラウザからメッセージ受信 → Geminiへ転送 ──
+    clientWs.on('message', (data) => {
+        const msg = data.toString();
+        console.log('ブラウザ→Gemini:', msg.substring(0, 200));
+        if (googleWs && googleWs.readyState === WebSocket.OPEN) {
+            googleWs.send(msg);
+        }
+    });
+
+    // ── ブラウザ切断 ──
     clientWs.on('close', () => {
         console.log('ブラウザ切断');
-        clearTimeout(forceStartTimer);
         if (googleWs) googleWs.close();
     });
 });
