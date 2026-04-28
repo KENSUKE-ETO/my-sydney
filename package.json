@@ -2,6 +2,9 @@
   "name": "sydney-live",
   "version": "1.0.0",
   "main": "server.js",
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "ws": "^8.18.0"
   },
