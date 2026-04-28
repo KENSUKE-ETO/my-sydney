@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { Pool } = require('pg');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const GEMINI_WS_URL = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`;
 
