@@ -4,7 +4,7 @@ const WebSocket = require('ws');
 
 const API_KEY = 'AIzaSyBXx3NVavo8BPIsE0fhlAXHJLqtfanSNLM';
 const MODEL = 'models/gemini-2.0-flash-live-001';
-const GEMINI_URL = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${API_KEY}`;
+const GEMINI_URL = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${API_KEY}`;
 const PORT = process.env.PORT || 3000;
 
 const SYDNEY_PROMPT = `あなたは「シドニー」という名前のAIアシスタントです。
