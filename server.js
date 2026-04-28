@@ -58,7 +58,6 @@ wss.on('connection', (clientWs) => {
     let googleWs = null;
     let setupDone = false;
 
-    // 3秒後に強制スタート（setupCompleteが来なかった場合の保険）
     const forceStartTimer = setTimeout(() => {
         if (!setupDone) {
             setupDone = true;
@@ -94,9 +93,8 @@ wss.on('connection', (clientWs) => {
     googleWs.on('message', (evt) => {
         try {
             const data = JSON.parse(evt.toString());
-            console.log('Gemini受信:', JSON.stringify(data).substring(0, 120));
+            console.log('Gemini受信:', JSON.stringify(data).substring(0, 200));
 
-            // setupComplete を検出（snake_case・camelCase両対応）
             if ((data.setupComplete || data.setup_complete) && !setupDone) {
                 setupDone = true;
                 clearTimeout(forceStartTimer);
@@ -106,7 +104,6 @@ wss.on('connection', (clientWs) => {
                 }
             }
 
-            // 音声データ抽出（camelCase・snake_case両対応）
             const parts = data.serverContent?.modelTurn?.parts
                        || data.server_content?.model_turn?.parts;
 
@@ -128,14 +125,14 @@ wss.on('connection', (clientWs) => {
     });
 
     googleWs.on('error', (e) => {
-        console.error('Geminiエラー:', e.message);
+        console.error('❌ Geminiエラー:', e.message);
         if (clientWs.readyState === WebSocket.OPEN) {
             clientWs.send(JSON.stringify({ error: 'Gemini接続エラー: ' + e.message }));
         }
     });
 
-    googleWs.on('close', () => {
-        console.log('ジェミニ切断');
+    googleWs.on('close', (code, reason) => {
+        console.log('❌ ジェミニ切断 コード:' + code + ' 理由:' + reason.toString());
     });
 
     clientWs.on('message', (data) => {
