@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "ws": "^8.16.0",
-    "@google/genai": "^0.7.0"
+    "@google/genai": "^1.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
