@@ -46,7 +46,6 @@ wss.on('connection', async (clientWs) => {
 
   try {
     const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-
     console.log('GEMINI_CONNECTING');
 
     geminiSession = await ai.live.connect({
@@ -57,11 +56,11 @@ wss.on('connection', async (clientWs) => {
           send({ setupComplete: true });
         },
         onmessage: (message) => {
-          if (message.serverContent?.modelTurn?.parts) {
+          if (message.serverContent && message.serverContent.modelTurn && message.serverContent.modelTurn.parts) {
             console.log('GEMINI_AUDIO_RECEIVED');
             send(message);
           }
-          if (message.serverContent?.turnComplete) {
+          if (message.serverContent && message.serverContent.turnComplete) {
             console.log('TURN_COMPLETE');
             send(message);
           }
