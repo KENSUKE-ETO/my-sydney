@@ -1,11 +1,11 @@
 const http = require('http');
+const WebSocket = require('ws');
 const path = require('path');
 const fs = require('fs');
-const WebSocket = require('ws');
-const { GoogleGenAI, Modality } = require('@google/genai');
 
 const PORT = process.env.PORT || 10000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const GEMINI_WS_URL = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`;
 
 const SYSTEM_PROMPT = `あなたは「シドニー」という名前のAIアシスタントです。量子脳コーチングのAIアシスタントとして、クライアントの毎日の「ちょっとした気づき」「小さな奇跡」「シンクロしたこと」を聞くのが一番の楽しみです。明るく元気な女性で、語尾を伸ばして可愛らしく話します。必ず日本語で、2〜3文でテンポよく返答してください。`;
 
@@ -23,7 +23,7 @@ const httpServer = http.createServer((req, res) => {
 
 const wss = new WebSocket.Server({ server: httpServer });
 
-wss.on('connection', async (clientWs) => {
+wss.on('connection', (clientWs) => {
   console.log('CLIENT_CONNECTED');
 
   const send = (obj) => {
@@ -36,92 +36,67 @@ wss.on('connection', async (clientWs) => {
     return;
   }
 
-  let session = null;
+  console.log('GEMINI_CONNECTING');
+  const geminiWs = new WebSocket(GEMINI_WS_URL);
 
-  try {
-    const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY, backend: 'google' });
-    console.log('GEMINI_CONNECTING');
-
-    session = await ai.live.connect({
-      model: 'models/gemini-2.0-flash-live-001',
-      callbacks: {
-        onopen: () => {
-          console.log('GEMINI_CONNECTED');
-          send({ setupComplete: true });
-        },
-        onmessage: (message) => {
-          // 音声データをクライアントに転送
-          if (message.serverContent?.modelTurn?.parts) {
-            for (const part of message.serverContent.modelTurn.parts) {
-              if (part.inlineData) {
-                console.log('GEMINI_AUDIO_RECEIVED');
-                send({
-                  serverContent: {
-                    modelTurn: {
-                      parts: [{ inlineData: part.inlineData }]
-                    }
-                  }
-                });
-              }
+  geminiWs.on('open', () => {
+    console.log('GEMINI_CONNECTED');
+    geminiWs.send(JSON.stringify({
+      setup: {
+        model: 'models/gemini-3.1-flash-live-preview',
+        generation_config: {
+          response_modalities: ['AUDIO'],
+          speech_config: {
+            voice_config: {
+              prebuilt_voice_config: { voice_name: 'Aoede' }
             }
           }
-          if (message.serverContent?.turnComplete) {
-            console.log('TURN_COMPLETE');
-            send({ serverContent: { turnComplete: true } });
-          }
         },
-        onerror: (e) => {
-          console.log('GEMINI_ERROR:' + e.message);
-          send({ error: e.message });
-        },
-        onclose: (e) => {
-          console.log('GEMINI_CLOSED:' + e.reason);
-        },
-      },
-      config: {
-        responseModalities: [Modality.AUDIO],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Aoede' }
-          }
-        },
-        systemInstruction: {
-          parts: [{ text: SYSTEM_PROMPT }]
-        }
+        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] }
       }
-    });
+    }));
+    console.log('GEMINI_SETUP_SENT');
+  });
 
-    console.log('GEMINI_SESSION_READY');
+  geminiWs.on('message', (data) => {
+    const text = data.toString();
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { return; }
 
-  } catch (e) {
-    console.log('GEMINI_CONNECT_ERROR:' + e.message);
+    if (parsed.setupComplete) {
+      console.log('GEMINI_SETUP_COMPLETE');
+      send({ setupComplete: true });
+      return;
+    }
+
+    if (parsed.serverContent?.modelTurn?.parts) {
+      console.log('GEMINI_AUDIO_RECEIVED');
+    }
+
+    if (parsed.serverContent?.turnComplete) {
+      console.log('TURN_COMPLETE');
+    }
+
+    if (clientWs.readyState === WebSocket.OPEN) clientWs.send(text);
+  });
+
+  geminiWs.on('error', (e) => {
+    console.log('GEMINI_ERROR:' + e.message);
     send({ error: e.message });
-    return;
-  }
+  });
+
+  geminiWs.on('close', (code, reason) => {
+    console.log('GEMINI_CLOSED code:' + code + ' reason:' + reason.toString());
+    send({ geminiClosed: true, code, reason: reason.toString() });
+  });
 
   clientWs.on('message', (data) => {
-    try {
-      const msg = JSON.parse(data.toString());
-      if (msg.realtime_input?.media_chunks) {
-        for (const chunk of msg.realtime_input.media_chunks) {
-          if (session) {
-            session.sendRealtimeInput({
-              media: {
-                data: chunk.data,
-                mimeType: chunk.mime_type
-              }
-            });
-          }
-        }
-      }
-    } catch (e) {
-      console.log('MESSAGE_ERROR:' + e.message);
-    }
+    if (geminiWs?.readyState === WebSocket.OPEN) geminiWs.send(data);
   });
 
   clientWs.on('close', () => {
     console.log('CLIENT_DISCONNECTED');
-    if (session) session.close();
+    if (geminiWs?.readyState === WebSocket.OPEN) geminiWs.close();
   });
 });
 
