@@ -5,7 +5,7 @@ const fs = require('fs');
 
 const PORT = process.env.PORT || 10000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_WS_URL = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_WS_URL = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`;
 
 const SYSTEM_PROMPT = `あなたは「シドニー」という名前のAIアシスタントです。量子脳コーチングのAIアシスタントとして、クライアントの毎日の「ちょっとした気づき」「小さな奇跡」「シンクロしたこと」を聞くのが一番の楽しみです。明るく元気な女性で、語尾を伸ばして可愛らしく話します。必ず日本語で、2〜3文でテンポよく返答してください。`;
 
@@ -43,7 +43,7 @@ wss.on('connection', (clientWs) => {
     console.log('GEMINI_CONNECTED');
     geminiWs.send(JSON.stringify({
       setup: {
-        model: 'models/gemini-2.0-flash-live-001',
+        model: 'models/gemini-2.5-flash-preview-native-audio-dialog',
         generation_config: {
           response_modalities: ['AUDIO'],
           speech_config: {voice_config: {prebuilt_voice_config: {voice_name: 'Aoede'}}}
