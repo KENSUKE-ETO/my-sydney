@@ -43,7 +43,7 @@ wss.on('connection', (clientWs) => {
     console.log('GEMINI_CONNECTED');
     geminiWs.send(JSON.stringify({
       setup: {
-        model: 'models/gemini-2.0-flash-exp',
+        model: 'models/gemini-3.1-flash-live-preview',
         generation_config: {
           response_modalities: ['AUDIO'],
           speech_config: {voice_config: {prebuilt_voice_config: {voice_name: 'Aoede'}}}
