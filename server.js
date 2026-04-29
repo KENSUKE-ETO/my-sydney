@@ -52,8 +52,7 @@ wss.on('connection', async (clientWs) => {
       model: 'models/gemini-3.1-flash-live-preview',
       callbacks: {
         onopen: () => {
-          console.log('GEMINI_CONNECTED');
-          send({ setupComplete: true });
+          console.log('GEMINI_ONOPEN');
         },
         onmessage: (message) => {
           if (message.serverContent && message.serverContent.modelTurn && message.serverContent.modelTurn.parts) {
@@ -85,7 +84,9 @@ wss.on('connection', async (clientWs) => {
       }
     });
 
+    // ai.live.connect()完了後にsetupCompleteを送信
     console.log('GEMINI_SESSION_READY');
+    send({ setupComplete: true });
 
   } catch (e) {
     console.log('GEMINI_CONNECT_ERROR:' + e.message);
