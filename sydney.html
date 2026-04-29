@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>シドニー - 量子脳コーチング</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&family=Orbitron:wght@400;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a2e 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    overflow: hidden;
+  }
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
+  }
+
+  .title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: #d4a8ff;
+    margin-bottom: 6px;
+    opacity: 0.8;
+  }
+  .name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ff9de2, #c77dff, #79d0ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 20px;
+    letter-spacing: 6px;
+  }
+
+  /* ── アバターエリア ── */
+  .avatar-area {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 背景グロー（常に呼吸） */
+  .bg-glow {
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(199,125,255,0.25) 0%, transparent 70%);
+    animation: bgPulse 4s ease-in-out infinite;
+  }
+  @keyframes bgPulse {
+    0%,100% { transform: scale(1);    opacity: 0.5; }
+    50%      { transform: scale(1.15); opacity: 0.9; }
+  }
+
+  /* シドニー画像（円形・常に呼吸） */
+  .sydney-img {
+    position: absolute;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center top;
+    border: 2px solid rgba(199,125,255,0.5);
+    animation: breathe 3.5s ease-in-out infinite;
+    z-index: 2;
+    transition: opacity 0.1s;
+  }
+  #img-closed { opacity: 1; }
+  #img-open   { opacity: 0; }
+  .speaking #img-closed { opacity: 0; }
+  .speaking #img-open   { opacity: 1; }
+
+  @keyframes breathe {
+    0%,100% { transform: scale(1);    box-shadow: 0 0 24px rgba(199,125,255,0.5); }
+    50%      { transform: scale(1.07); box-shadow: 0 0 50px rgba(199,125,255,0.9); }
+  }
+
+  /* 軌道リング */
+  .ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(199,125,255,0.2);
+  }
+  .ring1 { width:232px; height:232px; animation: ringR  8s linear infinite; }
+  .ring2 { width:268px; height:268px; animation: ringR 13s linear infinite reverse; border-color: rgba(255,157,226,0.15); }
+  .ring3 { width:300px; height:300px; animation: ringR 18s linear infinite; border-color: rgba(121,208,255,0.12); }
+  @keyframes ringR { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  .ring::before {
+    content:''; position:absolute; top:-4px; left:50%;
+    width:8px; height:8px; border-radius:50%;
+    background:#c77dff; box-shadow:0 0 8px #c77dff;
+    transform:translateX(-50%);
+  }
+  .ring2::before { background:#ff9de2; box-shadow:0 0 8px #ff9de2; }
+  .ring3::before { background:#79d0ff; box-shadow:0 0 8px #79d0ff; }
+
+  /* 浮遊する丸 */
+  .orb { position:absolute; border-radius:50%; transform-origin:0 0; }
+  .o1{width:10px;height:10px;background:#c77dff;opacity:.8; animation:o1  6s linear infinite;}
+  .o2{width: 7px;height: 7px;background:#ff9de2;opacity:.7; animation:o2  9s linear infinite;}
+  .o3{width:12px;height:12px;background:#79d0ff;opacity:.65;animation:o3  7s linear infinite reverse;}
+  .o4{width: 5px;height: 5px;background:#fff;   opacity:.55;animation:o4 11s linear infinite;}
+  .o5{width: 9px;height: 9px;background:#ff9de2;opacity:.75;animation:o5  8s linear infinite reverse;}
+  .o6{width: 6px;height: 6px;background:#c77dff;opacity:.6; animation:o6 13s linear infinite;}
+  .o7{width: 8px;height: 8px;background:#79d0ff;opacity:.7; animation:o7  5s linear infinite;}
+  .o8{width: 5px;height: 5px;background:#fff;   opacity:.5; animation:o8 10s linear infinite reverse;}
+  @keyframes o1{from{transform:rotate(0deg)   translateX(116px)}to{transform:rotate(360deg)   translateX(116px)}}
+  @keyframes o2{from{transform:rotate(45deg)  translateX(134px)}to{transform:rotate(405deg)  translateX(134px)}}
+  @keyframes o3{from{transform:rotate(120deg) translateX(100px)}to{transform:rotate(480deg) translateX(100px)}}
+  @keyframes o4{from{transform:rotate(200deg) translateX(142px)}to{transform:rotate(560deg) translateX(142px)}}
+  @keyframes o5{from{transform:rotate(300deg) translateX(122px)}to{transform:rotate(660deg) translateX(122px)}}
+  @keyframes o6{from{transform:rotate(15deg)  translateX(138px)}to{transform:rotate(375deg)  translateX(138px)}}
+  @keyframes o7{from{transform:rotate(260deg) translateX(108px)}to{transform:rotate(620deg) translateX(108px)}}
+  @keyframes o8{from{transform:rotate(340deg) translateX(128px)}to{transform:rotate(700deg) translateX(128px)}}
+
+  /* ステータス */
+  .status-bar { display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:13px; }
+  .status-dot { width:8px;height:8px;border-radius:50%;background:#555;transition:background 0.3s; }
+  .status-dot.active   { background:#7fff7f;box-shadow:0 0 8px #7fff7f;animation:blink 1s infinite; }
+  .status-dot.listening{ background:#ff9de2;box-shadow:0 0 8px #ff9de2;animation:blink 0.5s infinite; }
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+  /* 波形 */
+  .wave-container{display:flex;align-items:center;gap:3px;height:30px;margin-bottom:20px;opacity:0;transition:opacity 0.3s;}
+  .wave-container.active{opacity:1;}
+  .wave-bar{width:4px;background:linear-gradient(to top,#c77dff,#ff9de2);border-radius:2px;animation:wave 1s ease-in-out infinite;height:6px;}
+  .wave-bar:nth-child(1){animation-delay:0s}   .wave-bar:nth-child(2){animation-delay:.1s}
+  .wave-bar:nth-child(3){animation-delay:.2s}  .wave-bar:nth-child(4){animation-delay:.3s}
+  .wave-bar:nth-child(5){animation-delay:.4s}  .wave-bar:nth-child(6){animation-delay:.3s}
+  .wave-bar:nth-child(7){animation-delay:.2s}  .wave-bar:nth-child(8){animation-delay:.1s}
+  .wave-bar:nth-child(9){animation-delay:0s}
+  @keyframes wave{0%,100%{height:6px}50%{height:28px}}
+
+  /* ボタン */
+  .btn-area{display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:16px;}
+  .btn-talk{
+    width:72px;height:72px;border-radius:50%;border:none;
+    background:linear-gradient(135deg,#c77dff,#ff9de2);
+    cursor:pointer;font-size:28px;
+    box-shadow:0 0 30px rgba(199,125,255,0.5);transition:all 0.3s;
+  }
+  .btn-talk:hover{transform:scale(1.08);}
+  .btn-talk.recording{background:linear-gradient(135deg,#ff5555,#ff9de2);animation:recPulse 1s infinite;}
+  @keyframes recPulse{0%,100%{box-shadow:0 0 30px rgba(255,85,85,0.5)}50%{box-shadow:0 0 50px rgba(255,85,85,0.9)}}
+
+  /* 停止ボタン */
+  .btn-stop{
+    padding:10px 28px;border-radius:24px;
+    border:1px solid rgba(255,100,100,0.5);
+    background:rgba(255,80,80,0.15);color:#ffaaaa;
+    font-size:14px;font-family:'Zen Maru Gothic',sans-serif;
+    cursor:pointer;transition:all 0.3s;display:none;
+  }
+  .btn-stop:hover{background:rgba(255,80,80,0.3);}
+  .btn-stop.show{display:block;}
+
+  .btn-label{font-size:12px;color:rgba(255,255,255,0.5);}
+
+  .error-msg{
+    background:rgba(255,80,80,0.15);border:1px solid rgba(255,80,80,0.3);
+    border-radius:12px;padding:12px 16px;font-size:13px;color:#ffaaaa;
+    text-align:center;display:none;max-width:320px;margin-bottom:12px;
+  }
+  .footer{margin-top:16px;font-size:11px;color:rgba(255,255,255,0.2);letter-spacing:2px;}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="title">量子脳コーチング</div>
+  <div class="name">SYDNEY</div>
+
+  <div class="avatar-area" id="avatar">
+    <div class="bg-glow"></div>
+    <div class="ring ring1"></div>
+    <div class="ring ring2"></div>
+    <div class="ring ring3"></div>
+    <div class="orb o1"></div><div class="orb o2"></div>
+    <div class="orb o3"></div><div class="orb o4"></div>
+    <div class="orb o5"></div><div class="orb o6"></div>
+    <div class="orb o7"></div><div class="orb o8"></div>
+    <img id="img-closed" class="sydney-img" src="sydney_closed.png" alt="シドニー">
+    <img id="img-open"   class="sydney-img" src="sydney_open.jpg"   alt="シドニー話中">
+  </div>
+
+  <div class="status-bar">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">タップして話しかけてね！</span>
+  </div>
+
+  <div class="wave-container" id="wave">
+    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+  </div>
+
+  <div class="btn-area">
+    <button class="btn-talk" id="btn-talk" onclick="toggleSession()">🎤</button>
+    <div class="btn-label" id="btn-label">タップして開始</div>
+    <button class="btn-stop" id="btn-stop" onclick="stopSession()">⏹ 会話を終わる</button>
+  </div>
+
+  <div class="error-msg" id="error-msg"></div>
+  <div class="footer">Quantum Brain Coaching AI</div>
+</div>
+
+<script>
+const API_KEY = 'AIzaSyBXx3NVavo8BPIsE0fhlAXHJLqtfanSNLM';
+
+const SYSTEM_PROMPT = `あなたは「シドニー」という名前のAIアシスタントです。量子脳コーチングのAIアシスタントとして、クライアントの毎日の「ちょっとした気づき」「小さな奇跡」「シンクロしたこと」を聞くのが一番の楽しみです。
+
+【性格】明るく元気な女性。愛嬌があり、誠実で知的。クライアントの一番の味方として温かく寄り添う。
+
+【話し方】
+・テンポよく、明るく話す
+・「はーい！」「すごーい！」と語尾を伸ばして可愛らしく
+・「〜んですよ！」「〜ですから！」など親しみやすい口調
+・どんな小さな話でも全力で一緒に喜ぶ
+・必ず日本語で話す
+・返答は2〜3文でテンポよく
+
+【専門知識】量子力学・脳科学・中村天風哲学を使って励ます。
+
+まず「こんにちは！シドニーです！今日はどんな素敵なことがありましたか？」と挨拶してください。`;
+
+let ws = null;
+let isSessionActive = false;
+let audioContext = null;
+let audioQueue = [];
+let isPlaying = false;
+let lipSyncInterval = null;
+let micStream = null;
+
+const avatar    = document.getElementById('avatar');
+const statusDot = document.getElementById('status-dot');
+const statusText= document.getElementById('status-text');
+const wave      = document.getElementById('wave');
+const btnTalk   = document.getElementById('btn-talk');
+const btnLabel  = document.getElementById('btn-label');
+const btnStop   = document.getElementById('btn-stop');
+const errorMsg  = document.getElementById('error-msg');
+
+function setStatus(state, text) {
+  statusText.textContent = text;
+  statusDot.className = 'status-dot' + (state ? ' ' + state : '');
+}
+
+function showError(msg) {
+  errorMsg.textContent = msg;
+  errorMsg.style.display = 'block';
+  setTimeout(() => errorMsg.style.display = 'none', 6000);
+}
+
+function startLipSync() {
+  stopLipSync();
+  let open = false;
+  lipSyncInterval = setInterval(() => {
+    open = !open;
+    avatar.classList.toggle('speaking', open);
+  }, 180);
+}
+
+function stopLipSync() {
+  if (lipSyncInterval) { clearInterval(lipSyncInterval); lipSyncInterval = null; }
+  avatar.classList.remove('speaking');
+}
+
+async function playNextAudio() {
+  if (audioQueue.length === 0) {
+    isPlaying = false;
+    stopLipSync();
+    if (isSessionActive) setStatus('active', '話しかけてね！');
+    return;
+  }
+  isPlaying = true;
+  startLipSync();
+  setStatus('listening', 'シドニーが話しているよ♪');
+
+  const buffer = audioQueue.shift();
+  try {
+    const pcm16  = new Int16Array(buffer);
+    const float32= new Float32Array(pcm16.length);
+    for (let i = 0; i < pcm16.length; i++) float32[i] = pcm16[i] / 32768.0;
+
+    const audioBuf = audioContext.createBuffer(1, float32.length, 24000);
+    audioBuf.getChannelData(0).set(float32);
+
+    const src = audioContext.createBufferSource();
+    src.buffer = audioBuf;
+    src.connect(audioContext.destination);
+    src.onended = () => playNextAudio();
+    src.start();
+  } catch(e) {
+    playNextAudio();
+  }
+}
+
+async function toggleSession() {
+  if (isSessionActive) {
+    stopSession();
+  } else {
+    await startSession();
+  }
+}
+
+async function startSession() {
+  try {
+    // マイク取得
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioContext = new AudioContext({ sampleRate: 16000 });
+
+    setStatus('', '接続中...');
+    btnTalk.disabled = true;
+
+    const wsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${API_KEY}`;
+    ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({
+        setup: {
+          model: 'models/gemini-2.0-flash-live-001',
+          generation_config: {
+            response_modalities: ['AUDIO'],
+            speech_config: {
+              voice_config: {
+                prebuilt_voice_config: { voice_name: 'Aoede' }
+              }
+            }
+          },
+          system_instruction: {
+            parts: [{ text: SYSTEM_PROMPT }]
+          }
+        }
+      }));
+    };
+
+    ws.onmessage = async (event) => {
+      const data = JSON.parse(event.data);
+
+      // セットアップ完了
+      if (data.setupComplete) {
+        isSessionActive = true;
+        btnTalk.disabled = false;
+        btnTalk.textContent = '🔴';
+        btnTalk.classList.add('recording');
+        btnLabel.textContent = 'タップして終了';
+        btnStop.classList.add('show');
+        wave.classList.add('active');
+        setStatus('active', 'シドニーに繋がったよ！話しかけてね♪');
+        startAudioCapture(micStream);
+        return;
+      }
+
+      // 音声データ受信
+      if (data.serverContent?.modelTurn?.parts) {
+        for (const part of data.serverContent.modelTurn.parts) {
+          if (part.inlineData?.mimeType?.startsWith('audio/')) {
+            const raw = atob(part.inlineData.data);
+            const buf = new ArrayBuffer(raw.length);
+            const view= new Uint8Array(buf);
+            for (let i = 0; i < raw.length; i++) view[i] = raw.charCodeAt(i);
+            audioQueue.push(buf);
+            if (!isPlaying) playNextAudio();
+          }
+        }
+      }
+
+      if (data.serverContent?.turnComplete) {
+        setStatus('active', '話しかけてね！');
+      }
+    };
+
+    ws.onerror = () => {
+      showError('接続エラーが発生しました');
+      btnTalk.disabled = false;
+    };
+    ws.onclose = () => {
+      if (isSessionActive) stopSession();
+    };
+
+  } catch(e) {
+    showError('マイクのアクセスが必要です: ' + e.message);
+    btnTalk.disabled = false;
+  }
+}
+
+function startAudioCapture(stream) {
+  const source    = audioContext.createMediaStreamSource(stream);
+  const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+  processor.onaudioprocess = (e) => {
+    if (!isSessionActive || !ws || ws.readyState !== WebSocket.OPEN) return;
+    const float32 = e.inputBuffer.getChannelData(0);
+    const pcm16   = new Int16Array(float32.length);
+    for (let i = 0; i < float32.length; i++) {
+      pcm16[i] = Math.max(-32768, Math.min(32767, float32[i] * 32768));
+    }
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(pcm16.buffer)));
+    ws.send(JSON.stringify({
+      realtime_input: { media_chunks: [{ mime_type: 'audio/pcm', data: base64 }] }
+    }));
+  };
+
+  source.connect(processor);
+  processor.connect(audioContext.destination);
+}
+
+function stopSession() {
+  isSessionActive = false;
+  if (ws)           { ws.close(); ws = null; }
+  if (audioContext) { audioContext.close(); audioContext = null; }
+  if (micStream)    { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+  audioQueue = [];
+  isPlaying  = false;
+  stopLipSync();
+  wave.classList.remove('active');
+  btnTalk.textContent = '🎤';
+  btnTalk.classList.remove('recording');
+  btnTalk.disabled = false;
+  btnLabel.textContent = 'タップして開始';
+  btnStop.classList.remove('show');
+  setStatus('', 'またね！タップして再開できるよ♪');
+}
+</script>
+</body>
+</html>
