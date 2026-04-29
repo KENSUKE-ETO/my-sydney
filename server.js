@@ -106,7 +106,7 @@ wss.on('connection', async (clientWs) => {
         for (const chunk of msg.realtime_input.media_chunks) {
           if (session) {
             session.sendRealtimeInput({
-              audio: {
+              media: {
                 data: chunk.data,
                 mimeType: chunk.mime_type
               }
