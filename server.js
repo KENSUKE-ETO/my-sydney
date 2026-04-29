@@ -39,11 +39,11 @@ wss.on('connection', async (clientWs) => {
   let session = null;
 
   try {
-    const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+    const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY, backend: 'google' });
     console.log('GEMINI_CONNECTING');
 
     session = await ai.live.connect({
-      model: 'models/gemini-3.1-flash-live-preview',
+      model: 'models/gemini-2.0-flash-live-001',
       callbacks: {
         onopen: () => {
           console.log('GEMINI_CONNECTED');
