@@ -123,7 +123,7 @@ async function start(){
     ws=new WebSocket(url);
     ws.onopen=()=>{
       ws.send(JSON.stringify({setup:{
-        model:'models/gemini-2.0-flash-live-001',
+        model:'models/gemini-2.0-flash-exp',
         generation_config:{response_modalities:['AUDIO'],speech_config:{voice_config:{prebuilt_voice_config:{voice_name:'Aoede'}}}},
         system_instruction:{parts:[{text:SYSTEM_PROMPT}]}
       }}));
