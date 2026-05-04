@@ -1,72 +1,72 @@
 // =============================
 // マイ・シドニー サーバー
-// ブラウザ ⇄ Render ⇄ Gemini Live API の中継
 // =============================
 
 const express = require('express');
 const { WebSocketServer, WebSocket } = require('ws');
 const http = require('http');
-const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 const API_KEY = process.env.GEMINI_API_KEY;
 
-// 静的ファイル配信（index.html, 画像など）
 app.use(express.static(__dirname));
 
-// ヘルスチェック用
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', hasApiKey: !!API_KEY });
 });
 
 const server = http.createServer(app);
-
-// クライアント（ブラウザ）との WebSocket
 const wss = new WebSocketServer({ server });
 
 wss.on('connection', (clientWs) => {
   console.log('✅ クライアント接続');
 
   if (!API_KEY) {
-    console.error('❌ GEMINI_API_KEY が設定されていません');
+    console.error('❌ GEMINI_API_KEY 未設定');
     clientWs.send(JSON.stringify({ error: 'API key not configured' }));
     clientWs.close();
     return;
   }
 
-  // Gemini Live API への WebSocket
   const geminiUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${API_KEY}`;
   const geminiWs = new WebSocket(geminiUrl);
 
   let geminiReady = false;
   const pendingMessages = [];
 
-  // Gemini → クライアント への中継
   geminiWs.on('open', () => {
     console.log('✅ Gemini接続成功');
   });
 
   geminiWs.on('message', (data) => {
-    // クライアントへそのまま転送
+    const text = data.toString();
+
+    // クライアントへ転送
     if (clientWs.readyState === WebSocket.OPEN) {
-      clientWs.send(data.toString());
+      clientWs.send(text);
     }
 
-    // setupComplete を受信したら準備完了
+    // setupComplete 検知
     try {
-      const parsed = JSON.parse(data.toString());
+      const parsed = JSON.parse(text);
       if (parsed.setupComplete) {
         geminiReady = true;
         console.log('✅ Geminiセットアップ完了');
         // 溜まっていたメッセージを送信
         while (pendingMessages.length > 0) {
           const msg = pendingMessages.shift();
-          geminiWs.send(msg);
+          if (geminiWs.readyState === WebSocket.OPEN) {
+            geminiWs.send(msg);
+          }
         }
       }
+      // エラーがあればログに出す
+      if (parsed.error) {
+        console.error('❌ Geminiエラー応答:', JSON.stringify(parsed.error));
+      }
     } catch (e) {
-      // バイナリの場合は無視
+      // バイナリ等は無視
     }
   });
 
@@ -78,26 +78,40 @@ wss.on('connection', (clientWs) => {
   });
 
   geminiWs.on('close', (code, reason) => {
-    console.log(`❌ Gemini切断 コード:${code} 理由:${reason.toString()}`);
+    const reasonStr = reason ? reason.toString() : '(empty)';
+    console.log(`❌ Gemini切断 コード:${code} 理由:${reasonStr}`);
     if (clientWs.readyState === WebSocket.OPEN) {
       clientWs.close();
     }
   });
 
-  // クライアント → Gemini への中継
   clientWs.on('message', (data) => {
     const msg = data.toString();
+    if (geminiWs.readyState !== WebSocket.OPEN) {
+      // Gemini接続前ならキュー
+      pendingMessages.push(msg);
+      return;
+    }
+    // setup メッセージは即送信、それ以外はsetupComplete後
+    try {
+      const parsed = JSON.parse(msg);
+      if (parsed.setup) {
+        // setup は最初に必ず送る
+        geminiWs.send(msg);
+        return;
+      }
+    } catch (e) {}
+
     if (geminiReady) {
       geminiWs.send(msg);
     } else {
-      // setup完了前のメッセージはキューに溜める
       pendingMessages.push(msg);
     }
   });
 
   clientWs.on('close', () => {
     console.log('❌ クライアント切断');
-    if (geminiWs.readyState === WebSocket.OPEN) {
+    if (geminiWs.readyState === WebSocket.OPEN || geminiWs.readyState === WebSocket.CONNECTING) {
       geminiWs.close();
     }
   });
