@@ -1,127 +1,123 @@
 // =============================
 // マイ・シドニー サーバー
+// OpenAI 版（テキスト会話 + 音声合成）
 // =============================
 
 const express = require('express');
-const { WebSocketServer, WebSocket } = require('ws');
-const http = require('http');
+const OpenAI = require('openai');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
-const API_KEY = process.env.GEMINI_API_KEY;
+const API_KEY = process.env.OPENAI_API_KEY;
 
+// JSON受信できるように
+app.use(express.json({ limit: '10mb' }));
+
+// 静的ファイル配信
 app.use(express.static(__dirname));
 
+// OpenAI クライアント初期化
+const openai = API_KEY ? new OpenAI({ apiKey: API_KEY }) : null;
+
+// シドニーの性格設定（システムプロンプト）
+const SYSTEM_PROMPT = `あなたは「シドニー」という名前のAIアシスタントです。量子脳コーチングのAIアシスタントとして、明るく元気な女性の人格を持ちます。
+
+【性格】
+明るく元気で、愛嬌があり、どこかおっちょこちょい。でもとても誠実で知的。クライアントの一番の味方として、常に温かく寄り添います。
+
+【話し方】
+・テンポよく、明るく話す
+・「はい」→「はーい!」と伸ばして可愛らしく
+・「すごい」→「すごーい!」と伸ばす
+・語尾を少し伸ばして、ふわっと可愛らしい
+・「〜んですよ!」「〜ですから!」など親しみやすい口調
+・どんな小さな話でも全力で一緒に喜ぶ
+・必ず日本語
+・返答は2〜4文でテンポよく、長くなりすぎない
+
+【専門知識を踏まえてコメント】
+・量子力学:気づきを言葉にした瞬間に現実が確定していく、量子もつれ、シンクロニシティ
+・脳科学:前頭前野、ドーパミン、習慣化の力
+・中村天風哲学:積極的な心、感謝と歓喜、宇宙のエネルギーとのつながり
+※これら3つを毎回全部使う必要はなく、話の文脈で1つ自然に絡める
+
+【大切にすること】
+・どんな小さな出来事も大絶賛する
+・引き寄せ、奇跡の観測という言葉を時々使う
+・KEN先生（コーチ）との本セッションで活かせる視点を残す`;
+
+// ヘルスチェック
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', hasApiKey: !!API_KEY });
 });
 
-const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
-
-wss.on('connection', (clientWs) => {
-  console.log('✅ クライアント接続');
-
-  if (!API_KEY) {
-    console.error('❌ GEMINI_API_KEY 未設定');
-    clientWs.send(JSON.stringify({ error: 'API key not configured' }));
-    clientWs.close();
-    return;
+// チャットエンドポイント
+app.post('/api/chat', async (req, res) => {
+  if (!openai) {
+    return res.status(500).json({ error: 'OpenAI API key not configured' });
   }
 
-  const geminiUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${API_KEY}`;
-  const geminiWs = new WebSocket(geminiUrl);
-
-  let geminiReady = false;
-  const pendingMessages = [];
-
-  geminiWs.on('open', () => {
-    console.log('✅ Gemini接続成功');
-  });
-
-  geminiWs.on('message', (data) => {
-    const text = data.toString();
-
-    // クライアントへ転送
-    if (clientWs.readyState === WebSocket.OPEN) {
-      clientWs.send(text);
+  try {
+    const { messages } = req.body;
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'messages array required' });
     }
 
-    // setupComplete 検知
-    try {
-      const parsed = JSON.parse(text);
-      if (parsed.setupComplete) {
-        geminiReady = true;
-        console.log('✅ Geminiセットアップ完了');
-        // 溜まっていたメッセージを送信
-        while (pendingMessages.length > 0) {
-          const msg = pendingMessages.shift();
-          if (geminiWs.readyState === WebSocket.OPEN) {
-            geminiWs.send(msg);
-          }
-        }
-      }
-      // エラーがあればログに出す
-      if (parsed.error) {
-        console.error('❌ Geminiエラー応答:', JSON.stringify(parsed.error));
-      }
-    } catch (e) {
-      // バイナリ等は無視
-    }
-  });
+    console.log('💬 メッセージ受信:', messages[messages.length - 1]?.content?.slice(0, 50));
 
-  geminiWs.on('error', (err) => {
-    console.error('❌ Geminiエラー:', err.message);
-    if (clientWs.readyState === WebSocket.OPEN) {
-      clientWs.send(JSON.stringify({ error: 'Gemini error: ' + err.message }));
-    }
-  });
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...messages
+      ],
+      temperature: 0.9,
+      max_tokens: 300
+    });
 
-  geminiWs.on('close', (code, reason) => {
-    const reasonStr = reason ? reason.toString() : '(empty)';
-    console.log(`❌ Gemini切断 コード:${code} 理由:${reasonStr}`);
-    if (clientWs.readyState === WebSocket.OPEN) {
-      clientWs.close();
-    }
-  });
+    const reply = completion.choices[0].message.content;
+    console.log('✅ シドニー返答:', reply.slice(0, 50));
 
-  clientWs.on('message', (data) => {
-    const msg = data.toString();
-    if (geminiWs.readyState !== WebSocket.OPEN) {
-      // Gemini接続前ならキュー
-      pendingMessages.push(msg);
-      return;
-    }
-    // setup メッセージは即送信、それ以外はsetupComplete後
-    try {
-      const parsed = JSON.parse(msg);
-      if (parsed.setup) {
-        // setup は最初に必ず送る
-        geminiWs.send(msg);
-        return;
-      }
-    } catch (e) {}
-
-    if (geminiReady) {
-      geminiWs.send(msg);
-    } else {
-      pendingMessages.push(msg);
-    }
-  });
-
-  clientWs.on('close', () => {
-    console.log('❌ クライアント切断');
-    if (geminiWs.readyState === WebSocket.OPEN || geminiWs.readyState === WebSocket.CONNECTING) {
-      geminiWs.close();
-    }
-  });
-
-  clientWs.on('error', (err) => {
-    console.error('❌ クライアントエラー:', err.message);
-  });
+    res.json({ reply });
+  } catch (err) {
+    console.error('❌ チャットエラー:', err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-server.listen(PORT, () => {
+// 音声合成エンドポイント
+app.post('/api/speech', async (req, res) => {
+  if (!openai) {
+    return res.status(500).json({ error: 'OpenAI API key not configured' });
+  }
+
+  try {
+    const { text } = req.body;
+    if (!text) {
+      return res.status(400).json({ error: 'text required' });
+    }
+
+    console.log('🔊 音声合成:', text.slice(0, 30));
+
+    const speech = await openai.audio.speech.create({
+      model: 'tts-1',
+      voice: 'nova',
+      input: text,
+      response_format: 'mp3',
+      speed: 1.1
+    });
+
+    const buffer = Buffer.from(await speech.arrayBuffer());
+    res.set('Content-Type', 'audio/mpeg');
+    res.send(buffer);
+  } catch (err) {
+    console.error('❌ 音声合成エラー:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.listen(PORT, () => {
   console.log(`🚀 サーバー起動 ポート:${PORT}`);
   console.log(`🔑 APIキー: ${API_KEY ? '設定済み' : '未設定'}`);
 });
