@@ -29,7 +29,7 @@ wss.on('connection', (clientWs) => {
     return;
   }
 
-  const geminiUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${API_KEY}`;
+  const geminiUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${API_KEY}`;
   const geminiWs = new WebSocket(geminiUrl);
 
   let geminiReady = false;
