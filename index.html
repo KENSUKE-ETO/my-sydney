@@ -11,201 +11,402 @@
     font-family: 'Zen Maru Gothic', sans-serif;
     background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a2e 100%);
     min-height: 100vh;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    display: flex; flex-direction: column; align-items: center;
     color: #fff;
+    padding: 20px 16px 40px;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1px 1px at 80% 10%, rgba(255,200,255,0.3), transparent),
+      radial-gradient(1px 1px at 50% 70%, rgba(200,200,255,0.3), transparent),
+      radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,0.2), transparent),
+      radial-gradient(1px 1px at 90% 60%, rgba(255,255,255,0.2), transparent);
+    pointer-events: none; z-index: 0;
   }
   .container {
+    position: relative; z-index: 1;
     display: flex; flex-direction: column; align-items: center;
-    width: 100%; max-width: 420px; padding: 20px;
+    width: 100%; max-width: 480px;
   }
   .title {
     font-family: 'Orbitron', sans-serif;
-    font-size: 13px; letter-spacing: 4px; color: #d4a8ff;
-    text-transform: uppercase; margin-bottom: 6px; opacity: 0.8;
+    font-size: 12px; letter-spacing: 4px; color: #d4a8ff;
+    text-transform: uppercase; margin-bottom: 4px; opacity: 0.8;
   }
   .name {
     font-family: 'Orbitron', sans-serif;
-    font-size: 36px; font-weight: 700;
+    font-size: 32px; font-weight: 700;
     background: linear-gradient(135deg, #ff9de2, #c77dff, #79d0ff);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text; margin-bottom: 24px; letter-spacing: 6px;
+    background-clip: text; margin-bottom: 16px; letter-spacing: 6px;
   }
-  .avatar-container { position: relative; width: 240px; height: 300px; margin-bottom: 20px; }
-  .avatar-img {
-    position: absolute; top: 0; left: 0;
-    width: 240px; height: 300px;
-    object-fit: cover;
-    border-radius: 120px 120px 80px 80px;
-    transition: opacity 0.1s ease;
-    filter: drop-shadow(0 0 20px rgba(199,125,255,0.4));
+  .avatar-stage {
+    position: relative;
+    width: 240px; height: 240px;
+    margin-bottom: 16px;
+    display: flex; align-items: center; justify-content: center;
   }
-  #img-closed { opacity: 1; }
-  #img-open { opacity: 0; }
-  .avatar-container.speaking #img-closed { opacity: 0; }
-  .avatar-container.speaking #img-open { opacity: 1; }
-  .status-bar {
-    display: flex; align-items: center; gap: 8px;
-    margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.6);
+  .ring {
+    position: absolute; border-radius: 50%;
+    pointer-events: none;
   }
-  .status-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #555;
+  .ring-1 {
+    width: 240px; height: 240px;
+    border: 1px solid rgba(199,125,255,0.3);
+    animation: rotate 12s linear infinite;
   }
-  .status-dot.active { background: #7fff7f; box-shadow: 0 0 8px #7fff7f; }
-  .status-dot.listening { background: #ff9de2; box-shadow: 0 0 8px #ff9de2; }
-  .btn-talk {
-    width: 72px; height: 72px; border-radius: 50%;
-    border: none;
-    background: linear-gradient(135deg, #c77dff, #ff9de2);
-    cursor: pointer;
-    font-size: 28px;
-    box-shadow: 0 0 30px rgba(199,125,255,0.5);
+  .ring-1::before, .ring-1::after {
+    content: ''; position: absolute;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #c77dff; box-shadow: 0 0 10px #c77dff;
+  }
+  .ring-1::before { top: -3px; left: 50%; }
+  .ring-1::after { bottom: -3px; left: 50%; }
+  .ring-2 {
+    width: 200px; height: 200px;
+    border: 1px dashed rgba(255,157,226,0.4);
+    animation: rotate 8s linear infinite reverse;
+  }
+  .ring-3 {
+    width: 280px; height: 280px;
+    border: 1px solid rgba(121,208,255,0.2);
+    animation: rotate 20s linear infinite;
+  }
+  .ring-3::before {
+    content: ''; position: absolute;
+    width: 4px; height: 4px; border-radius: 50%;
+    background: #79d0ff; box-shadow: 0 0 8px #79d0ff;
+    top: 50%; left: -2px;
+  }
+  @keyframes rotate {
+    to { transform: rotate(360deg); }
+  }
+  .glow {
+    position: absolute;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(199,125,255,0.3), transparent 70%);
+    animation: pulse 3s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.1); opacity: 1; }
+  }
+  .avatar {
+    position: relative;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid rgba(199,125,255,0.5);
+    box-shadow: 0 0 30px rgba(199,125,255,0.4);
+    transition: transform 0.3s ease;
+  }
+  .avatar.speaking {
+    animation: speak 0.6s ease-in-out infinite;
+  }
+  @keyframes speak {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(199,125,255,0.4); }
+    50% { transform: scale(1.08); box-shadow: 0 0 50px rgba(255,157,226,0.7); }
+  }
+  .avatar img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .status {
+    font-size: 13px; color: rgba(255,255,255,0.7);
+    margin-bottom: 16px; min-height: 20px;
+    text-align: center;
+  }
+  .chat-area {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(199,125,255,0.2);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .chat-area:empty { display: none; }
+  .msg {
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 85%;
+    word-wrap: break-word;
+  }
+  .msg.user {
+    background: rgba(121,208,255,0.15);
+    border: 1px solid rgba(121,208,255,0.3);
+    margin-left: auto;
+    text-align: right;
+  }
+  .msg.sydney {
+    background: rgba(255,157,226,0.15);
+    border: 1px solid rgba(255,157,226,0.3);
+    margin-right: auto;
+  }
+  .msg-label {
+    font-size: 10px; opacity: 0.6;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+  }
+  .input-area {
+    width: 100%;
+    display: flex; gap: 8px;
     margin-bottom: 12px;
   }
-  .btn-talk.recording {
-    background: linear-gradient(135deg, #ff5555, #ff9de2);
+  textarea {
+    flex: 1;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(199,125,255,0.3);
+    border-radius: 12px;
+    color: #fff;
+    padding: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: none;
+    min-height: 50px;
+    max-height: 120px;
   }
-  .btn-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 24px; }
-  .error-msg {
-    background: rgba(255,80,80,0.15);
-    border: 1px solid rgba(255,80,80,0.3);
-    border-radius: 12px; padding: 12px 16px;
-    font-size: 13px; color: #ffaaaa;
-    text-align: center; display: none; margin-top: 12px;
+  textarea:focus {
+    outline: none;
+    border-color: rgba(255,157,226,0.6);
   }
-  .footer { margin-top: 24px; font-size: 11px; color: rgba(255,255,255,0.2); letter-spacing: 2px; }
+  textarea::placeholder { color: rgba(255,255,255,0.4); }
+  .btn {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #c77dff, #ff9de2);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(199,125,255,0.4);
+    transition: transform 0.2s;
+  }
+  .btn:hover { transform: scale(1.05); }
+  .btn:active { transform: scale(0.95); }
+  .btn:disabled {
+    opacity: 0.5; cursor: not-allowed;
+    transform: none;
+  }
+  .controls {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+  .btn-secondary {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(199,125,255,0.3);
+    box-shadow: none;
+    font-size: 12px;
+    padding: 8px 14px;
+  }
+  .footer {
+    margin-top: 20px;
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 2px;
+    text-align: center;
+  }
 </style>
 </head>
 <body>
 <div class="container">
   <div class="title">量子脳コーチング</div>
   <div class="name">SYDNEY</div>
-  <div class="avatar-container" id="avatar">
-    <img id="img-closed" class="avatar-img" src="sydney_closed.png" alt="シドニー">
-    <img id="img-open" class="avatar-img" src="sydney_open.jpg" alt="シドニー話中">
+
+  <div class="avatar-stage">
+    <div class="ring ring-3"></div>
+    <div class="ring ring-1"></div>
+    <div class="ring ring-2"></div>
+    <div class="glow"></div>
+    <div class="avatar" id="avatar">
+      <img src="sydney_closed.png" alt="シドニー">
+    </div>
   </div>
-  <div class="status-bar">
-    <div class="status-dot" id="status-dot"></div>
-    <span id="status-text">タップして話しかけてね!</span>
+
+  <div class="status" id="status">今日はどんな奇跡がありましたか?</div>
+
+  <div class="chat-area" id="chat"></div>
+
+  <div class="input-area">
+    <textarea id="input" placeholder="今日の気づきや嬉しかったことを話してください..."></textarea>
+    <button class="btn" id="send">送信</button>
   </div>
-  <button class="btn-talk" id="btn-talk">🎤</button>
-  <div class="btn-label" id="btn-label">タップして開始</div>
-  <div class="error-msg" id="error-msg"></div>
+
+  <div class="controls">
+    <button class="btn btn-secondary" id="download">📄 会話を保存</button>
+    <button class="btn btn-secondary" id="clear">🔄 リセット</button>
+  </div>
+
   <div class="footer">Quantum Brain Coaching AI</div>
 </div>
+
 <script>
-const SYSTEM_PROMPT = `あなたは「シドニー」という名前のAIアシスタントです。量子脳コーチングのアシスタントとして、明るく元気に話します。語尾を伸ばして可愛らしく、必ず日本語で、2〜3文でテンポよく返答してください。クライアントの小さな気づきや奇跡を全力で喜びます。`;
+const avatar = document.getElementById('avatar');
+const status = document.getElementById('status');
+const chat = document.getElementById('chat');
+const input = document.getElementById('input');
+const sendBtn = document.getElementById('send');
+const downloadBtn = document.getElementById('download');
+const clearBtn = document.getElementById('clear');
 
-let ws=null, isActive=false, audioContext=null, audioStream=null, processor=null;
-let audioQueue=[], isPlaying=false, lipSyncInterval=null, nextAudioTime=0;
+let conversation = [];
+let currentAudio = null;
 
-const avatar=document.getElementById('avatar');
-const statusDot=document.getElementById('status-dot');
-const statusText=document.getElementById('status-text');
-const btnTalk=document.getElementById('btn-talk');
-const btnLabel=document.getElementById('btn-label');
-const errorMsg=document.getElementById('error-msg');
+function setStatus(text) { status.textContent = text; }
 
-btnTalk.addEventListener('click', toggle);
+function addMessage(role, text) {
+  const msg = document.createElement('div');
+  msg.className = 'msg ' + (role === 'user' ? 'user' : 'sydney');
+  msg.innerHTML = '<div class="msg-label">' + (role === 'user' ? 'あなた' : 'シドニー') + '</div>' + escapeHtml(text);
+  chat.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;
+}
 
-function setStatus(s,t){ statusText.textContent=t; statusDot.className='status-dot'+(s?' '+s:''); }
-function showError(m){ errorMsg.textContent=m; errorMsg.style.display='block'; setTimeout(()=>errorMsg.style.display='none',5000); }
-function startLip(){ let o=false; lipSyncInterval=setInterval(()=>{ o=!o; avatar.classList.toggle('speaking',o); },180); }
-function stopLip(){ if(lipSyncInterval){clearInterval(lipSyncInterval);lipSyncInterval=null;} avatar.classList.remove('speaking'); }
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
 
-async function toggle(){ if(isActive){stop();} else {await start();} }
+async function send() {
+  const text = input.value.trim();
+  if (!text) return;
 
-async function start(){
-  try{
-    audioStream=await navigator.mediaDevices.getUserMedia({audio:true});
-    audioContext=new AudioContext({sampleRate:16000});
-    const url=(location.protocol==='https:'?'wss://':'ws://')+location.host;
-    ws=new WebSocket(url);
-    ws.onopen=()=>{
-      ws.send(JSON.stringify({setup:{
-        model:'models/gemini-2.0-flash-exp',
-        generation_config:{response_modalities:['AUDIO'],speech_config:{voice_config:{prebuilt_voice_config:{voice_name:'Aoede'}}}},
-        system_instruction:{parts:[{text:SYSTEM_PROMPT}]}
-      }}));
+  sendBtn.disabled = true;
+  input.value = '';
+  addMessage('user', text);
+  conversation.push({ role: 'user', content: text });
+
+  setStatus('シドニーが考えてるよ...');
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: conversation })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || '通信エラー');
+    }
+
+    const data = await res.json();
+    const reply = data.reply;
+
+    addMessage('sydney', reply);
+    conversation.push({ role: 'assistant', content: reply });
+
+    // 音声再生
+    setStatus('シドニーが話してるよ♪');
+    await playSpeech(reply);
+
+    setStatus('話しかけてね♪');
+  } catch (e) {
+    setStatus('エラー: ' + e.message);
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+
+async function playSpeech(text) {
+  try {
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+
+    const res = await fetch('/api/speech', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+
+    if (!res.ok) throw new Error('音声生成失敗');
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    currentAudio = audio;
+
+    avatar.classList.add('speaking');
+
+    audio.onended = () => {
+      avatar.classList.remove('speaking');
+      URL.revokeObjectURL(url);
     };
-    ws.onmessage=async(e)=>{
-      let d; try{d=JSON.parse(e.data);}catch{return;}
-      if(d.error){showError('エラー: '+d.error); stop(); return;}
-      if(d.setupComplete){
-        isActive=true;
-        setStatus('active','シドニーに繋がったよ! 話しかけてね♪');
-        btnTalk.textContent='🔴'; btnTalk.classList.add('recording');
-        btnLabel.textContent='タップして終了';
-        capture();
-        return;
-      }
-      if(d.serverContent?.modelTurn?.parts){
-        for(const p of d.serverContent.modelTurn.parts){
-          if(p.inlineData?.data){
-            const a=atob(p.inlineData.data);
-            const b=new ArrayBuffer(a.length);
-            const v=new Uint8Array(b);
-            for(let i=0;i<a.length;i++) v[i]=a.charCodeAt(i);
-            audioQueue.push(b);
-            if(!isPlaying) play();
-          }
-        }
-      }
-      if(d.serverContent?.turnComplete){ setStatus('active','話しかけてね!'); }
-    };
-    ws.onerror=()=>showError('接続エラー');
-    ws.onclose=()=>{ if(isActive) stop(); };
-  }catch(e){ showError('マイクが必要: '+e.message); }
+
+    await audio.play();
+  } catch (e) {
+    avatar.classList.remove('speaking');
+    console.error('音声再生エラー:', e);
+  }
 }
 
-async function play(){
-  if(audioQueue.length===0){ isPlaying=false; stopLip(); return; }
-  isPlaying=true; startLip();
-  setStatus('listening','シドニーが話しているよ♪');
-  const buf=audioQueue.shift();
-  try{
-    const p16=new Int16Array(buf);
-    const f32=new Float32Array(p16.length);
-    for(let i=0;i<p16.length;i++) f32[i]=p16[i]/32768.0;
-    const ab=audioContext.createBuffer(1,f32.length,24000);
-    ab.getChannelData(0).set(f32);
-    const src=audioContext.createBufferSource();
-    src.buffer=ab; src.connect(audioContext.destination);
-    const t=Math.max(audioContext.currentTime,nextAudioTime);
-    src.start(t); nextAudioTime=t+ab.duration;
-    src.onended=()=>play();
-  }catch{ play(); }
+function downloadConversation() {
+  if (conversation.length === 0) {
+    setStatus('まだ会話がないよ!');
+    return;
+  }
+
+  const date = new Date();
+  const dateStr = date.getFullYear() + '-' + 
+    String(date.getMonth()+1).padStart(2,'0') + '-' + 
+    String(date.getDate()).padStart(2,'0');
+  const timeStr = String(date.getHours()).padStart(2,'0') + ':' + 
+    String(date.getMinutes()).padStart(2,'0');
+
+  let text = '======================================\n';
+  text += 'シドニーとの会話記録\n';
+  text += '日時: ' + dateStr + ' ' + timeStr + '\n';
+  text += '======================================\n\n';
+
+  conversation.forEach(m => {
+    text += (m.role === 'user' ? '【あなた】' : '【シドニー】') + '\n';
+    text += m.content + '\n\n';
+  });
+
+  text += '======================================\n';
+  text += 'Quantum Brain Coaching - 量子脳コーチング\n';
+
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sydney-' + dateStr + '-' + timeStr.replace(':','') + '.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+
+  setStatus('保存したよ♪');
 }
 
-function capture(){
-  const src=audioContext.createMediaStreamSource(audioStream);
-  processor=audioContext.createScriptProcessor(4096,1,1);
-  processor.onaudioprocess=(e)=>{
-    if(!isActive||!ws||ws.readyState!==WebSocket.OPEN) return;
-    const f32=e.inputBuffer.getChannelData(0);
-    const p16=new Int16Array(f32.length);
-    for(let i=0;i<f32.length;i++) p16[i]=Math.max(-32768,Math.min(32767,f32[i]*32768));
-    let bin=''; const bytes=new Uint8Array(p16.buffer);
-    for(let i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
-    const b64=btoa(bin);
-    ws.send(JSON.stringify({realtimeInput:{mediaChunks:[{mimeType:'audio/pcm;rate=16000',data:b64}]}}));
-  };
-  src.connect(processor);
-  processor.connect(audioContext.destination);
+function clearConversation() {
+  if (conversation.length > 0 && !confirm('会話を消去しますか?\n保存していない場合は失われます。')) return;
+  conversation = [];
+  chat.innerHTML = '';
+  setStatus('今日はどんな奇跡がありましたか?');
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  avatar.classList.remove('speaking');
 }
 
-function stop(){
-  isActive=false;
-  if(ws){try{ws.close();}catch{} ws=null;}
-  if(processor){try{processor.disconnect();}catch{} processor=null;}
-  if(audioStream){audioStream.getTracks().forEach(t=>t.stop()); audioStream=null;}
-  if(audioContext){try{audioContext.close();}catch{} audioContext=null;}
-  audioQueue=[]; isPlaying=false; nextAudioTime=0;
-  stopLip();
-  btnTalk.textContent='🎤'; btnTalk.classList.remove('recording');
-  btnLabel.textContent='タップして開始';
-  setStatus('','タップして話しかけてね!');
-}
+sendBtn.addEventListener('click', send);
+downloadBtn.addEventListener('click', downloadConversation);
+clearBtn.addEventListener('click', clearConversation);
+
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    send();
+  }
+});
 </script>
 </body>
 </html>
