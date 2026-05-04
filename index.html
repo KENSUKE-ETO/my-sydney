@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>シドニー - 量子脳コーチング AIアシスタント</title>
+<title>シドニー - 量子脳コーチング</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Orbitron:wght@400;700&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -12,10 +12,9 @@
     background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a2e 100%);
     min-height: 100vh;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    color: #fff; overflow: hidden;
+    color: #fff;
   }
   .container {
-    position: relative; z-index: 1;
     display: flex; flex-direction: column; align-items: center;
     width: 100%; max-width: 420px; padding: 20px;
   }
@@ -32,17 +31,6 @@
     background-clip: text; margin-bottom: 24px; letter-spacing: 6px;
   }
   .avatar-container { position: relative; width: 240px; height: 300px; margin-bottom: 20px; }
-  .avatar-glow {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 260px; height: 320px; border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(199,125,255,0.15) 0%, transparent 70%);
-    animation: pulse-glow 3s ease-in-out infinite;
-  }
-  @keyframes pulse-glow {
-    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-    50% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
-  }
   .avatar-img {
     position: absolute; top: 0; left: 0;
     width: 240px; height: 300px;
@@ -61,41 +49,23 @@
   }
   .status-dot {
     width: 8px; height: 8px; border-radius: 50%;
-    background: #555; transition: background 0.3s;
+    background: #555;
   }
-  .status-dot.active {
-    background: #7fff7f; box-shadow: 0 0 8px #7fff7f;
-    animation: blink 1s ease-in-out infinite;
-  }
-  .status-dot.listening {
-    background: #ff9de2; box-shadow: 0 0 8px #ff9de2;
-    animation: blink 0.5s ease-in-out infinite;
-  }
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
+  .status-dot.active { background: #7fff7f; box-shadow: 0 0 8px #7fff7f; }
+  .status-dot.listening { background: #ff9de2; box-shadow: 0 0 8px #ff9de2; }
   .btn-talk {
     width: 72px; height: 72px; border-radius: 50%;
     border: none;
     background: linear-gradient(135deg, #c77dff, #ff9de2);
     cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
     font-size: 28px;
     box-shadow: 0 0 30px rgba(199,125,255,0.5);
-    transition: all 0.3s; margin-bottom: 12px;
+    margin-bottom: 12px;
   }
-  .btn-talk:hover { transform: scale(1.08); box-shadow: 0 0 40px rgba(199,125,255,0.7); }
-  .btn-talk:active { transform: scale(0.95); }
   .btn-talk.recording {
     background: linear-gradient(135deg, #ff5555, #ff9de2);
-    animation: recording-pulse 1s ease-in-out infinite;
   }
-  @keyframes recording-pulse {
-    0%, 100% { box-shadow: 0 0 30px rgba(255,85,85,0.5); }
-    50% { box-shadow: 0 0 50px rgba(255,85,85,0.8); }
-  }
-  .btn-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 24px; letter-spacing: 1px; }
+  .btn-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 24px; }
   .error-msg {
     background: rgba(255,80,80,0.15);
     border: 1px solid rgba(255,80,80,0.3);
@@ -103,24 +73,139 @@
     font-size: 13px; color: #ffaaaa;
     text-align: center; display: none; margin-top: 12px;
   }
-  .footer { margin-top: 24px; font-size: 11px; color: rgba(255,255,255,0.2); letter-spacing: 2px; text-transform: uppercase; }
+  .footer { margin-top: 24px; font-size: 11px; color: rgba(255,255,255,0.2); letter-spacing: 2px; }
 </style>
 </head>
 <body>
-
 <div class="container">
   <div class="title">量子脳コーチング</div>
   <div class="name">SYDNEY</div>
-
   <div class="avatar-container" id="avatar">
-    <div class="avatar-glow"></div>
     <img id="img-closed" class="avatar-img" src="sydney_closed.png" alt="シドニー">
     <img id="img-open" class="avatar-img" src="sydney_open.jpg" alt="シドニー話中">
   </div>
-
   <div class="status-bar">
     <div class="status-dot" id="status-dot"></div>
     <span id="status-text">タップして話しかけてね!</span>
   </div>
+  <button class="btn-talk" id="btn-talk">🎤</button>
+  <div class="btn-label" id="btn-label">タップして開始</div>
+  <div class="error-msg" id="error-msg"></div>
+  <div class="footer">Quantum Brain Coaching AI</div>
+</div>
+<script>
+const SYSTEM_PROMPT = `あなたは「シドニー」という名前のAIアシスタントです。量子脳コーチングのアシスタントとして、明るく元気に話します。語尾を伸ばして可愛らしく、必ず日本語で、2〜3文でテンポよく返答してください。クライアントの小さな気づきや奇跡を全力で喜びます。`;
 
-  <button class="btn-t
+let ws=null, isActive=false, audioContext=null, audioStream=null, processor=null;
+let audioQueue=[], isPlaying=false, lipSyncInterval=null, nextAudioTime=0;
+
+const avatar=document.getElementById('avatar');
+const statusDot=document.getElementById('status-dot');
+const statusText=document.getElementById('status-text');
+const btnTalk=document.getElementById('btn-talk');
+const btnLabel=document.getElementById('btn-label');
+const errorMsg=document.getElementById('error-msg');
+
+btnTalk.addEventListener('click', toggle);
+
+function setStatus(s,t){ statusText.textContent=t; statusDot.className='status-dot'+(s?' '+s:''); }
+function showError(m){ errorMsg.textContent=m; errorMsg.style.display='block'; setTimeout(()=>errorMsg.style.display='none',5000); }
+function startLip(){ let o=false; lipSyncInterval=setInterval(()=>{ o=!o; avatar.classList.toggle('speaking',o); },180); }
+function stopLip(){ if(lipSyncInterval){clearInterval(lipSyncInterval);lipSyncInterval=null;} avatar.classList.remove('speaking'); }
+
+async function toggle(){ if(isActive){stop();} else {await start();} }
+
+async function start(){
+  try{
+    audioStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    audioContext=new AudioContext({sampleRate:16000});
+    const url=(location.protocol==='https:'?'wss://':'ws://')+location.host;
+    ws=new WebSocket(url);
+    ws.onopen=()=>{
+      ws.send(JSON.stringify({setup:{
+        model:'models/gemini-2.0-flash-live-001',
+        generation_config:{response_modalities:['AUDIO'],speech_config:{voice_config:{prebuilt_voice_config:{voice_name:'Aoede'}}}},
+        system_instruction:{parts:[{text:SYSTEM_PROMPT}]}
+      }}));
+    };
+    ws.onmessage=async(e)=>{
+      let d; try{d=JSON.parse(e.data);}catch{return;}
+      if(d.error){showError('エラー: '+d.error); stop(); return;}
+      if(d.setupComplete){
+        isActive=true;
+        setStatus('active','シドニーに繋がったよ! 話しかけてね♪');
+        btnTalk.textContent='🔴'; btnTalk.classList.add('recording');
+        btnLabel.textContent='タップして終了';
+        capture();
+        return;
+      }
+      if(d.serverContent?.modelTurn?.parts){
+        for(const p of d.serverContent.modelTurn.parts){
+          if(p.inlineData?.data){
+            const a=atob(p.inlineData.data);
+            const b=new ArrayBuffer(a.length);
+            const v=new Uint8Array(b);
+            for(let i=0;i<a.length;i++) v[i]=a.charCodeAt(i);
+            audioQueue.push(b);
+            if(!isPlaying) play();
+          }
+        }
+      }
+      if(d.serverContent?.turnComplete){ setStatus('active','話しかけてね!'); }
+    };
+    ws.onerror=()=>showError('接続エラー');
+    ws.onclose=()=>{ if(isActive) stop(); };
+  }catch(e){ showError('マイクが必要: '+e.message); }
+}
+
+async function play(){
+  if(audioQueue.length===0){ isPlaying=false; stopLip(); return; }
+  isPlaying=true; startLip();
+  setStatus('listening','シドニーが話しているよ♪');
+  const buf=audioQueue.shift();
+  try{
+    const p16=new Int16Array(buf);
+    const f32=new Float32Array(p16.length);
+    for(let i=0;i<p16.length;i++) f32[i]=p16[i]/32768.0;
+    const ab=audioContext.createBuffer(1,f32.length,24000);
+    ab.getChannelData(0).set(f32);
+    const src=audioContext.createBufferSource();
+    src.buffer=ab; src.connect(audioContext.destination);
+    const t=Math.max(audioContext.currentTime,nextAudioTime);
+    src.start(t); nextAudioTime=t+ab.duration;
+    src.onended=()=>play();
+  }catch{ play(); }
+}
+
+function capture(){
+  const src=audioContext.createMediaStreamSource(audioStream);
+  processor=audioContext.createScriptProcessor(4096,1,1);
+  processor.onaudioprocess=(e)=>{
+    if(!isActive||!ws||ws.readyState!==WebSocket.OPEN) return;
+    const f32=e.inputBuffer.getChannelData(0);
+    const p16=new Int16Array(f32.length);
+    for(let i=0;i<f32.length;i++) p16[i]=Math.max(-32768,Math.min(32767,f32[i]*32768));
+    let bin=''; const bytes=new Uint8Array(p16.buffer);
+    for(let i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
+    const b64=btoa(bin);
+    ws.send(JSON.stringify({realtimeInput:{mediaChunks:[{mimeType:'audio/pcm;rate=16000',data:b64}]}}));
+  };
+  src.connect(processor);
+  processor.connect(audioContext.destination);
+}
+
+function stop(){
+  isActive=false;
+  if(ws){try{ws.close();}catch{} ws=null;}
+  if(processor){try{processor.disconnect();}catch{} processor=null;}
+  if(audioStream){audioStream.getTracks().forEach(t=>t.stop()); audioStream=null;}
+  if(audioContext){try{audioContext.close();}catch{} audioContext=null;}
+  audioQueue=[]; isPlaying=false; nextAudioTime=0;
+  stopLip();
+  btnTalk.textContent='🎤'; btnTalk.classList.remove('recording');
+  btnLabel.textContent='タップして開始';
+  setStatus('','タップして話しかけてね!');
+}
+</script>
+</body>
+</html>
