@@ -1,14 +1,14 @@
 {
   "name": "my-sydney",
-  "version": "1.0.0",
-  "description": "Quantum Brain Coaching AI Assistant Sydney",
+  "version": "2.0.0",
+  "description": "Quantum Brain Coaching AI Assistant Sydney - OpenAI Edition",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "ws": "^8.16.0"
+    "openai": "^4.28.0"
   },
   "engines": {
     "node": ">=18.0.0"
